@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MecMaroc - High-Precision PO Contract Studio</title>
+    <!-- Tailwind CSS for modern layout structure -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Questrial/Century Gothic geometric web font fallback -->
+    <link href="https://fonts.googleapis.com/css2?family=Questrial&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for sleek line icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Client-side PDF Generation Engine to bypass Iframe sandbox print blockades -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        body {
+            /* Century Gothic system stack with high-fidelity geometric fallbacks */
+            font-family: 'Century Gothic', 'Questrial', 'CenturyGothic', 'AppleGothic', 'URW Gothic L', sans-serif;
+            background-color: #0b0f19;
+            transition: background-color 0.3s ease;
+        }
+        
+        .mono-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Finite Element Analysis (FEA) Contour Gradient bar styling */
+        .fea-gradient {
+            background: linear-gradient(90deg, 
+                #1e3a8a 0%,   /* Low Stress (Deep Blue) */
+                #06b6d4 25%,  /* Mid-Low (Cyan) */
+                #10b981 50%,  /* Optimal (Green) */
+                #f59e0b 75%,  /* Yield point (Yellow) */
+                #ef4444 100%  /* High Stress / Max Limit (Red) */
+            );
+            height: 6px;
+        }
+
+        /* Absolute A4 Simulation styles for on-screen paper presentation with zero overlap */
+        .a4-page {
+            background: #ffffff;
+            color: #1e293b;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            width: 210mm;
+            height: 296mm; /* Sized 1mm shorter than full A4 height as a safety margin to prevent accidental double page breaks */
+            padding: 15mm 15mm;
+            margin: 0 auto;
+            position: relative;
+            box-sizing: border-box;
+            transition: box-shadow 0.3s ease;
+            
+            /* CSS Flex column layouts to align the header, body, and footer beautifully */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden; /* Prevent spill overflow rendering as blank pages */
+        }
+
+        /* Screen spacing page margins to preview content visually */
+        #entirePrintableSuite .a4-page {
+            margin-bottom: 30px;
+        }
+
+        /* Avoid trailing blank page after the signature page */
+        #pageSignature {
+            page-break-after: avoid !important;
+            break-after: avoid !important;
+        }
+
+        /* Screen Print View Active Overrides */
+        .screen-print-active {
+            background-color: #334155 !important;
+        }
+        
+        .screen-print-active .a4-page {
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6) !important;
+            margin-top: 20px !important;
+            margin-bottom: 20px !important;
+        }
+
+        /* Page breaks and cleanup during official export or print */
+        @media print {
+            body {
+                background-color: #ffffff !important;
+                color: #000000 !important;
+                padding: 0 !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            #entirePrintableSuite .a4-page {
+                box-shadow: none !important;
+                border: none !important;
+                padding: 15mm 15mm !important;
+                margin: 0 !important;
+                width: 100% !important;
+                height: 296mm !important;
+                page-break-after: always !important;
+                break-after: always !important;
+            }
+            #entirePrintableSuite #pageSignature {
+                page-break-after: avoid !important;
+                break-after: avoid !important;
+            }
+            input, select, textarea {
+                border: none !important;
+                background: transparent !important;
+                padding: 0 !important;
+                appearance: none !important;
+                -webkit-appearance: none !important;
+            }
+            .print-border-none {
+                border: none !important;
+            }
+        }
+
+        /* Custom scrollbars for a clean workspace darkmode */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-slate-100">
+
+    <!-- Floating Print View Banner Mode Controls (Only visible in screen print mode) -->
+    <div id="exitPrintModeBtn" class="hidden no-print bg-amber-500 text-slate-950 px-6 py-3 font-bold text-xs sticky top-0 z-50 flex items-center justify-between shadow-xl border-b border-amber-600">
+        <div class="flex items-center gap-2">
+            <i class="fa-solid fa-triangle-exclamation text-sm animate-pulse"></i>
+            <span>SCREEN PRINT VIEW ACTIVE (Optimized for perfect PDF generation).</span>
+        </div>
+        <div class="flex items-center gap-4">
+            <span class="hidden md:inline text-[11px] text-slate-800 font-normal">Press Ctrl+P / Cmd+P, or right-click sheet & select 'Print' to save as PDF.</span>
+            <button onclick="togglePrintMode()" class="bg-slate-950 hover:bg-slate-900 text-white px-4 py-1.5 rounded transition uppercase tracking-wider text-[10px]">
+                <i class="fa-solid fa-right-from-bracket mr-1"></i> Exit Print Mode
+            </button>
+        </div>
+    </div>
+
+    <!-- Screen Navigation & Controls (Hidden on Print) -->
+    <header class="no-print bg-slate-900/95 backdrop-blur border-b border-slate-800 sticky top-0 z-40 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-4">
+            
+            <div class="flex items-center gap-4">
+                <!-- Sleek CSS Logo reconstruction that perfectly matches image_a378d7.png -->
+                <div class="bg-slate-950 p-2.5 px-4 rounded-lg border border-slate-800 flex items-center justify-center">
+                    <div class="flex items-center gap-1.5 font-sans select-none">
+                        <span class="text-rose-600 font-black tracking-tighter leading-none" style="font-family: 'Century Gothic', Arial, sans-serif; font-size: 38px; font-weight: 900;">M</span>
+                        <div class="flex flex-col justify-end -ml-0.5 leading-none" style="margin-bottom: 4px;">
+                            <span class="text-slate-300 font-extrabold tracking-tight uppercase leading-none" style="font-family: 'Century Gothic', Arial, sans-serif; font-weight: 800; font-size: 18px;">ec</span>
+                            <span class="text-rose-500 font-black tracking-widest uppercase leading-none" style="font-family: 'Century Gothic', Arial, sans-serif; font-weight: 900; font-size: 9px; margin-top: 1px;">Maroc</span>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h1 class="text-md font-black tracking-wider flex items-center gap-2 text-white font-sans">
+                        MecMaroc <span class="text-[10px] tracking-widest bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded font-bold">ESTIMATION SUITE</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">B2B RFQ Quotation Engine for Metrolec Spain</p>
+                </div>
+            </div>
+            
+            <!-- Quick Interactive Control Actions -->
+            <div class="flex flex-wrap items-center gap-3 justify-end w-full lg:w-auto">
+                <button onclick="scrollPage(1)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3 py-2 rounded-lg border border-slate-700 transition flex items-center gap-1.5 font-medium">
+                    <i class="fa-solid fa-file-invoice"></i> Page 1
+                </button>
+                <button onclick="scrollPage(2)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3 py-2 rounded-lg border border-slate-700 transition flex items-center gap-1.5 font-medium">
+                    <i class="fa-solid fa-list-check"></i> BOM Table
+                </button>
+                <button onclick="scrollPage(3)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3 py-2 rounded-lg border border-slate-700 transition flex items-center gap-1.5 font-medium">
+                    <i class="fa-solid fa-handshake"></i> Authorization
+                </button>
+
+                <div class="h-6 w-px bg-slate-800 hidden md:block"></div>
+
+                <!-- Screen print mode trigger works around standard iframe sandbox limits -->
+                <button onclick="togglePrintMode()" class="bg-slate-800 hover:bg-slate-700 text-rose-400 text-xs px-3.5 py-2 rounded-lg border border-rose-500/30 transition flex items-center gap-1.5 font-bold">
+                    <i class="fa-solid fa-eye"></i> Screen Print View
+                </button>
+
+                <!-- Bulletproof Instant Client-Side PDF Compiler & Downloader -->
+                <button onclick="exportInvoiceToPDF()" class="bg-gradient-to-r from-rose-600 to-amber-500 hover:from-rose-700 hover:to-amber-600 text-white font-bold px-5 py-2 rounded-lg shadow-lg shadow-rose-500/10 transition flex items-center gap-2 text-xs uppercase tracking-wider">
+                    <i class="fa-solid fa-download"></i> Export PDF File
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Live Interactive Workspace -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 flex flex-col lg:flex-row gap-6 items-start justify-center">
+        
+        <!-- Live Configuration Sidemenu (Hidden on Print) -->
+        <aside class="no-print w-full lg:w-80 bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col gap-6 shrink-0">
+            <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                    <i class="fa-solid fa-calculator text-rose-500"></i> DDP Valladolid Logistics
+                </h3>
+                <p class="text-[11px] text-slate-500 mt-1">Configure shipping markup, regulatory taxes & currency exchange to Spain.</p>
+            </div>
+
+            <hr class="border-slate-800">
+
+            <!-- Interactive Currency Setup -->
+            <div class="flex flex-col gap-3">
+                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fa-solid fa-coins text-amber-500"></i> Quote Currency Standard
+                </label>
+                
+                <div>
+                    <span class="block text-[10px] text-slate-500 mb-1">Select Output Currency:</span>
+                    <select id="inputCurrencySelect" onchange="window.changeGlobalCurrency()" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs text-white focus:outline-none focus:border-rose-500 font-bold">
+                        <option value="EUR" selected>Euro (€)</option>
+                        <option value="USD">US Dollar ($)</option>
+                        <option value="MAD">Moroccan Dirham (MAD)</option>
+                    </select>
+                </div>
+            </div>
+
+            <hr class="border-slate-800">
+
+            <!-- Logistics Cost Parameters -->
+            <div class="flex flex-col gap-3">
+                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Metrolec Incoterms Settings</label>
+                
+                <div>
+                    <span class="block text-[10px] text-slate-500 mb-1">DDP Spain Freight Cost <span id="freightCurrencyLabel">(€)</span>:</span>
+                    <input type="number" id="inputDdpFreight" value="350.00" oninput="window.updateFreight(this.value)" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs text-white focus:outline-none focus:border-rose-500 font-mono">
+                </div>
+
+                <div>
+                    <span class="block text-[10px] text-slate-500 mb-1">Import Handling & Customs <span id="customsCurrencyLabel">(€)</span>:</span>
+                    <input type="number" id="inputDdpCustoms" value="120.00" oninput="window.updateCustoms(this.value)" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs text-white focus:outline-none focus:border-rose-500 font-mono">
+                </div>
+
+                <div>
+                    <span class="block text-[10px] text-slate-500 mb-1">Spanish VAT (TVA) %:</span>
+                    <select id="inputVatSelect" onchange="runCalculations()" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs text-white focus:outline-none focus:border-rose-500">
+                        <option value="21" selected>21% (Spain Standard)</option>
+                        <option value="10">10% (Reduced)</option>
+                        <option value="0">0% (Incoterm Exempt)</option>
+                    </select>
+                </div>
+            </div>
+
+            <hr class="border-slate-800">
+
+            <!-- Materials Standard Equivalence Helper -->
+            <div>
+                <h4 class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
+                    <i class="fa-solid fa-cubes text-slate-400"></i> Materials Equivalence Key
+                </h4>
+                <div class="bg-slate-950/50 rounded-lg p-3 border border-slate-800 flex flex-col gap-2 text-[10px]">
+                    <div class="flex justify-between border-b border-slate-800 pb-1">
+                        <span class="font-bold text-rose-400">F-111</span>
+                        <span class="text-slate-400">C15 / AISI 1015</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-800 pb-1">
+                        <span class="font-bold text-rose-400">F-112</span>
+                        <span class="text-slate-400">C45 / AISI 1045</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-800 pb-1">
+                        <span class="font-bold text-rose-400">F-114</span>
+                        <span class="text-slate-400">C45R / AISI 1045</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-800 pb-1">
+                        <span class="font-bold text-rose-400">F-125</span>
+                        <span class="text-slate-400">42CrMo4 / AISI 4140</span>
+                    </div>
+                    <div class="flex justify-between border-b border-slate-800 pb-1">
+                        <span class="font-bold text-rose-400">F-174</span>
+                        <span class="text-slate-400">1.2344 / AISI H13</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-bold text-rose-400">S235</span>
+                        <span class="text-slate-400">St37-2 / A36 Structural</span>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-slate-800">
+
+            <!-- Interactive Batch Toggles -->
+            <div class="flex flex-col gap-3">
+                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Active Batches in Print</label>
+                <div class="flex flex-col gap-2">
+                    <label class="flex items-center gap-2 cursor-pointer text-xs">
+                        <input type="checkbox" id="toggleTorno" checked onchange="filterBatchViews()" class="rounded border-slate-700 bg-slate-800 text-rose-500 focus:ring-0">
+                        <span>Include TORNO (Lathe)</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer text-xs">
+                        <input type="checkbox" id="toggleMecanizado" checked onchange="filterBatchViews()" class="rounded border-slate-700 bg-slate-800 text-rose-500 focus:ring-0">
+                        <span>Include MECANIZADO (Machined)</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer text-xs">
+                        <input type="checkbox" id="toggleCorte" checked onchange="filterBatchViews()" class="rounded border-slate-700 bg-slate-800 text-rose-500 focus:ring-0">
+                        <span>Include CORTE Y PLEGADO</span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="text-[10px] text-slate-600 text-center font-sans">
+                MecMaroc Logistics Engine © 2026. Custom layout tailored for Metrolec RFQ 20260604.
+            </div>
+        </aside>
+
+        <!-- Document Sheet Wrapper to compile -->
+        <div class="flex-1 w-full max-w-[210mm]" id="entirePrintableSuite">
+            
+            <!-- ================= PAGE 1 ================= -->
+            <section id="page1" class="a4-page relative overflow-hidden">
+                <div class="fea-gradient absolute top-0 left-0 right-0"></div>
+                
+                <div class="flex flex-col gap-6 pt-2">
+                    
+                    <!-- Page Header Brand block -->
+                    <div class="flex justify-between items-start gap-4">
+                        <div class="flex items-center gap-4">
+                            <!-- High Fidelity CSS Logo built directly from screenshot proportions -->
+                            <div class="flex items-center justify-center">
+                                <div class="flex items-center gap-1.5 font-sans select-none">
+                                    <span class="text-rose-600 font-extrabold tracking-tighter leading-none" style="font-family: 'Century Gothic', Arial, sans-serif; font-size: 58px; font-weight: 900;">M</span>
+                                    <div class="flex flex-col justify-end -ml-1.5 leading-none" style="margin-bottom: 6px;">
+                                        <span class="text-slate-700 font-extrabold tracking-tight uppercase leading-none" style="font-family: 'Century Gothic', Arial, sans-serif; font-weight: 800; font-size: 26px;">ec</span>
+                                        <span class="text-rose-600 font-black tracking-widest uppercase leading-none" style="font-family: 'Century Gothic', Arial, sans-serif; font-weight: 900; font-size: 13px; margin-top: 1px;">Maroc</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Thin vertical divider line next to logo -->
+                            <div class="h-11 w-px bg-slate-300 self-center mx-1"></div>
+                            
+                            <div class="text-[9px] text-slate-500 leading-tight font-sans pl-1">
+                                <strong>MecMaroc Bureau d'Études</strong><br>
+                                Mechanical Design & FEA Optimization<br>
+                                Zone Industrielle Oukacha, Sidi Bernoussi<br>
+                                Casablanca, Morocco • Tel: +212 (0) 522 35 12 90<br>
+                                <span class="mono-font text-[8px] text-slate-400">Siret: 801 621 798 00025 • VAT ID: MA848016217</span>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col items-end gap-1 text-right">
+                            <div class="bg-rose-600 text-white font-extrabold text-[11px] tracking-wider px-3.5 py-2 rounded shadow-md uppercase">
+                                PRO-FORMA QUOTATION
+                            </div>
+                            <span class="text-[10px] text-slate-400 mono-font font-bold">RFQ: MM-2026-0604</span>
+                        </div>
+                    </div>
+
+                    <!-- Client and Logistics Split Grid -->
+                    <div class="grid grid-cols-2 gap-4 border-t border-b border-slate-200 py-4">
+                        <div class="text-xs text-slate-600 leading-relaxed font-sans">
+                            <span class="block text-[8px] uppercase tracking-wider text-slate-400 font-bold mb-1">Invoicing / Delivery Destination</span>
+                            <strong>Metrolec S.L. Spain</strong><br>
+                            Attn: Procurement Team<br>
+                            <span contenteditable="true" class="text-slate-800 hover:bg-slate-100 p-0.5 rounded outline-none focus:bg-yellow-50">Calle del Plomo, Polígono Industrial San Cristóbal</span><br>
+                            <span contenteditable="true" class="text-slate-800 hover:bg-slate-100 p-0.5 rounded outline-none focus:bg-yellow-50">47012 Valladolid, Spain</span><br>
+                            Incoterms: <strong class="text-rose-600">DDP Metrolec Facilities</strong>
+                        </div>
+                        <div class="text-xs text-slate-600 leading-relaxed border-l border-slate-200 pl-4 grid grid-cols-2 gap-y-2">
+                            <div>
+                                <span class="block text-[8px] uppercase tracking-wider text-slate-400 font-bold">Quotation Ref</span>
+                                <span class="font-extrabold text-slate-950 font-mono text-sm">QT-2026-9042</span>
+                            </div>
+                            <div>
+                                <span class="block text-[8px] uppercase tracking-wider text-slate-400 font-bold">Date Issued</span>
+                                <span class="font-bold text-slate-900 font-mono text-sm">08.06.2026</span>
+                            </div>
+                            <div>
+                                <span class="block text-[8px] uppercase tracking-wider text-slate-400 font-bold">Client Account</span>
+                                <span class="font-bold text-slate-900 font-mono">MET-902-ES</span>
+                            </div>
+                            <div>
+                                <span class="block text-[8px] uppercase tracking-wider text-slate-400 font-bold">Validity Period</span>
+                                <span class="font-bold text-slate-900 font-mono">60 Days</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary of Requested Batches -->
+                    <div class="text-xs">
+                        <div class="font-bold uppercase tracking-wider text-slate-800 border-b border-slate-200 pb-1.5 mb-2 flex justify-between items-center">
+                            <span>BATCH DESIGNATION & EXCLUDED PROCESS LIMITS</span>
+                            <span class="text-[9px] text-slate-400 font-normal">Metrolec Valladolid</span>
+                        </div>
+                        
+                        <div class="bg-slate-50 p-3 rounded border border-slate-150 grid grid-cols-3 gap-4 text-slate-700">
+                            <div>
+                                <strong class="text-slate-950">Batch 1: TORNO</strong><br>
+                                <span class="text-[10px] text-slate-500">10 references • Turning turning-lathe parts with vacuum nitriding & zinc silver plating.</span>
+                            </div>
+                            <div>
+                                <strong class="text-slate-950">Batch 2: MECANIZADO</strong><br>
+                                <span class="text-[10px] text-slate-500">15 references • Milling, machining, burnishing & specialized black oxide (Pavonado).</span>
+                            </div>
+                            <div>
+                                <strong class="text-slate-950">Batch 3: CORTE Y PLEGADO</strong><br>
+                                <span class="text-[10px] text-slate-500">19 references • Laser cutting, precise press bending in S235, Brass & Stainless.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Material Standards Cross-Reference Grid for Page 1 -->
+                    <div>
+                        <div class="font-bold uppercase text-[9px] tracking-widest text-slate-400 mb-1">MecMaroc Verified Chemical & Heat-Treatment Standards Matrix</div>
+                        <div class="border border-slate-200 rounded overflow-hidden text-xs">
+                            <table class="w-full text-left font-sans">
+                                <thead class="bg-slate-100 text-slate-700 uppercase text-[8px] font-bold tracking-wider border-b border-slate-200">
+                                    <tr>
+                                        <th class="p-2 w-1/4">Requested Designation</th>
+                                        <th class="p-2 w-1/4">Equivalent AISI/ASTM</th>
+                                        <th class="p-2 w-1/4">DIN/EN Norm</th>
+                                        <th class="p-2 w-1/4">Specified Finishing Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 text-slate-800 bg-white text-[10.5px]">
+                                    <tr>
+                                        <td class="p-1.5 px-3"><strong>F-111</strong></td>
+                                        <td class="p-1.5 font-mono text-slate-600">AISI 1015</td>
+                                        <td class="p-1.5">C15 (1.0401)</td>
+                                        <td class="p-1.5 text-slate-500">Silver Zinc Plating (Cincado Plata)</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-1.5 px-3"><strong>F-112</strong></td>
+                                        <td class="p-1.5 font-mono text-slate-600">AISI 1045</td>
+                                        <td class="p-1.5">C45 (1.0503)</td>
+                                        <td class="p-1.5 text-slate-500">Silver Zinc / Burnishing (Pavonado)</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-1.5 px-3"><strong>F-125</strong></td>
+                                        <td class="p-1.5 font-mono text-slate-600">AISI 4140</td>
+                                        <td class="p-1.5">42CrMo4 (1.7225)</td>
+                                        <td class="p-1.5 text-slate-500">Quenched + Black Oxide (Pavonado)</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-1.5 px-3"><strong>F-174</strong></td>
+                                        <td class="p-1.5 font-mono text-slate-600">AISI H13 Tool Steel</td>
+                                        <td class="p-1.5">1.2344 (X40CrMoV5-1)</td>
+                                        <td class="p-1.5 text-rose-600 font-bold">Vacuum Nitriding (60 HRC, 0.3mm)</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-1.5 px-3"><strong>S235</strong></td>
+                                        <td class="p-1.5 font-mono text-slate-600">A36</td>
+                                        <td class="p-1.5">S235JR (1.0038)</td>
+                                        <td class="p-1.5 text-slate-500">Standard anti-corrosion silver zinc coating</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Footer aligned nicely at the base of the cover sheet -->
+                <div class="text-[9px] text-slate-400 text-center border-t border-slate-150 pt-3 mt-auto font-sans">
+                    Incoterms Delivery Location: Metrolec's facilities in Valladolid (Spain). Transport via secure European freight forwarding.<br>
+                    <strong>MecMaroc SAS • Page 1 of <span class="total-page-count">3</span></strong>
+                </div>
+            </section>
+
+            <!-- ================= DYNAMIC BOM PAGES WRAPPER ================= -->
+            <div id="dynamicBomPages">
+                <!-- Dynamically Paginated BOM Sheets go here (15 items max per page) -->
+            </div>
+
+            <!-- ================= PAGE 3 (SIGNATURES) ================= -->
+            <section id="pageSignature" class="a4-page relative overflow-hidden">
+                <div class="fea-gradient absolute top-0 left-0 right-0"></div>
+                
+                <div class="flex flex-col justify-between h-full pt-2">
+                    
+                    <div class="flex flex-col gap-4 text-xs text-slate-700 leading-relaxed font-sans">
+                        
+                        <!-- Header Reference Info -->
+                        <div class="flex justify-between items-center border-b border-slate-200 pb-3 mb-2">
+                            <span class="text-xs font-extrabold text-slate-500 uppercase tracking-widest">Contract Conditions & Legal Authorization</span>
+                            <span class="text-xs text-slate-500 font-mono">Contract Ref: <strong id="bdcRefTextPageSignature">QT-2026-9042</strong></span>
+                        </div>
+
+                        <!-- Regulatory / Legal Terms & Conditions -->
+                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-150 flex flex-col gap-2 text-[10.5px] text-slate-600 leading-relaxed">
+                            <p>
+                                <strong>1. SEPARATE QUOTATION TERMS:</strong> As requested by the Metrolec procurement protocol, all listed part references are treated as separate, individual quotations. MecMaroc guarantees that no package assembly bundle requirements will be enforced upon partial order execution.
+                            </p>
+                            <p>
+                                <strong>2. DDP LOGISTICS COMPLIANCE (INCOTERMS 2020):</strong> Under Delivered Duty Paid (DDP Valladolid facilities) protocols, all export customs clearance, handling fees, import customs duties, and overland transport are fully absorbed and executed by MecMaroc and its licensed EU customs brokers.
+                            </p>
+                            <p>
+                                <strong>3. HIGH-TEMPERATURE NITRIDING COMPLIANCE:</strong> For references using F-174 tool steel, vacuum nitriding parameters are guaranteed to maintain surface structural integrity up to a total of <strong>60 HRC</strong> with a precise mechanical casing thickness target of <strong>0.3mm</strong>.
+                            </p>
+                        </div>
+
+                        <!-- Conditions Particulieres Box -->
+                        <div class="flex flex-col gap-1">
+                            <span class="font-extrabold text-slate-800 uppercase text-[9px] tracking-wider">Custom Quality & Acceptance Directives:</span>
+                            <div contenteditable="true" class="bg-white border border-slate-300 rounded p-3 text-slate-500 min-h-[80px] focus:outline-none focus:ring-1 focus:ring-rose-500">
+                                • Final parts must be cleared of oil residue and individually packaged to prevent surface abrasion during overland freight to Spain.<br>
+                                • Standard ISO 2768-m dimensional tolerancing applies to all mechanical machining and lathe components unless explicitly specified on client drawings.
+                            </div>
+                        </div>
+
+                        <!-- Signatures & Authorization Section -->
+                        <div class="border border-slate-300 rounded-lg p-4 bg-slate-50/50 flex flex-col gap-4 mt-2">
+                            <h4 class="font-black text-slate-950 uppercase text-[9px] tracking-widest border-b border-slate-200 pb-1.5">
+                                ESTIMATION APPROVAL & TECHNICAL SIGN-OFF
+                            </h4>
+                            
+                            <p class="text-[10px] text-slate-500 leading-normal">
+                                This document is an official pro-forma pricing proposal. To proceed with production validation, please sign and return this document to the assigned MecMaroc estimation counselor.
+                            </p>
+
+                            <div class="grid grid-cols-2 gap-8 mt-2">
+                                <div class="flex flex-col gap-6">
+                                    <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">
+                                        Prepared By (MecMaroc Engineering Office):
+                                    </span>
+                                    <div class="border-b border-slate-300 w-11/12 h-14 relative bg-white rounded border border-dashed flex items-center justify-center">
+                                        <div class="border border-rose-500/30 text-rose-600/70 font-black text-[9px] p-1 px-2.5 rounded rotate-6 uppercase tracking-wider pointer-events-none">
+                                            MecMaroc ESTIMATION
+                                        </div>
+                                    </div>
+                                    <div class="text-[10px] text-slate-500 flex flex-col gap-1">
+                                        <span>Estimator: <strong>Eng. Zakaria El Hachimi</strong></span>
+                                        <span>Date: <strong>08.06.2026</strong></span>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-col gap-6">
+                                    <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">
+                                        Client Acceptance (Metrolec S.L. Stamp & Signature):
+                                    </span>
+                                    <div class="border-b border-slate-300 w-11/12 h-14 relative bg-white rounded border border-dashed flex items-center justify-center">
+                                        <span class="text-[9px] text-slate-300 font-sans pointer-events-none">Corporate Stamp / Seal</span>
+                                    </div>
+                                    <div class="text-[10px] text-slate-500 flex flex-col gap-1">
+                                        <span>Fait à / Location: <strong contenteditable="true" class="hover:bg-slate-200 px-1 rounded">Valladolid</strong></span>
+                                        <span>Date: <strong contenteditable="true" class="hover:bg-slate-200 px-1 rounded">____/____/2026</strong></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- Page Footer -->
+                    <div class="text-[9px] text-slate-400 text-center border-t border-slate-200 pt-3 font-sans">
+                        All materials testing and dimensional certifications are produced following international quality protocols.<br>
+                        <strong>MecMaroc SAS • Page <span id="sigPageCurrent">3</span> of <span id="sigPageTotal">3</span></strong>
+                    </div>
+
+                </div>
+            </section>
+
+        </div>
+
+    </main>
+
+    <!-- App System Toast -->
+    <div id="appToast" class="no-print fixed bottom-6 right-6 bg-slate-900 text-slate-100 px-4 py-3 rounded-xl shadow-2xl border border-slate-800 flex items-center gap-3 transform translate-y-24 opacity-0 transition-all duration-300 z-50">
+        <i class="fa-solid fa-bell text-rose-400" id="toastIcon"></i>
+        <span id="toastMessage" class="text-xs font-bold">Successfully initialized!</span>
+    </div>
+
+    <!-- Hidden Printable Page Footing -->
+    <footer class="no-print bg-slate-950/60 border-t border-slate-900/60 py-4 text-center text-slate-600 text-xs mt-10">
+        <p>© 2026 MecMaroc Engineering Bureau • High Fidelity Interactive Document Studio</p>
+    </footer>
+
+    <!-- Business logic & State manager script -->
+    <script>
+        // High-fidelity pre-populated RFQ items directly mapped from Metrolec's request text
+        const initialBoMItems = [
+            // BATCH 1: TORNO
+            {
+                batch: "torno",
+                pos: "1.1",
+                article: "14310-2039_220302",
+                material: "F-112",
+                desc: "Torno / Turn-Lathe Setup - Silver Zinc Plating (Cincado Plata)",
+                qty: 1000,
+                basePrice: 5.40
+            },
+            {
+                batch: "torno",
+                pos: "1.2",
+                article: "14310-2411",
+                material: "F-174",
+                desc: "Vacuum Nitriding (60HRC + 0.3mm thickness) + Silver Zinc Plating",
+                qty: 200,
+                basePrice: 16.50
+            },
+            {
+                batch: "torno",
+                pos: "1.3",
+                article: "14310-2407",
+                material: "F-174",
+                desc: "Vacuum Nitriding (60HRC + 0.3mm thickness) + Silver Zinc Plating",
+                qty: 200,
+                basePrice: 15.80
+            },
+            {
+                batch: "torno",
+                pos: "1.4",
+                article: "APOYO_M6",
+                material: "F-174",
+                desc: "M6 Support Mount - Vacuum Nitriding + Silver Zinc Plating",
+                qty: 200,
+                basePrice: 12.20
+            },
+            {
+                batch: "torno",
+                pos: "1.5",
+                article: "MET8005274",
+                material: "F-174",
+                desc: "Precision Collar Component - Vacuum Nitriding + Silver Zinc Plating",
+                qty: 200,
+                basePrice: 14.90
+            },
+            {
+                batch: "torno",
+                pos: "1.6",
+                article: "13134-020-902-013",
+                material: "F-112",
+                desc: "Threaded Lathe Stub - Silver Zinc Plating (Cincado Plata)",
+                qty: 200,
+                basePrice: 6.10
+            },
+            {
+                batch: "torno",
+                pos: "1.7",
+                article: "MET8005277",
+                material: "F-174",
+                desc: "Cylinder Axle - Vacuum Nitriding (60HRC) + Silver Zinc Plating",
+                qty: 200,
+                basePrice: 17.20
+            },
+            {
+                batch: "torno",
+                pos: "1.8",
+                article: "14930-1004",
+                material: "F-174",
+                desc: "Specialized Flanged Stud - Vacuum Nitriding + Silver Zinc Plating",
+                qty: 100,
+                basePrice: 22.50
+            },
+            {
+                batch: "torno",
+                pos: "1.9",
+                article: "502_05145",
+                material: "F-112",
+                desc: "Small Lathe Pin - Silver Zinc Plating (Cincado Plata)",
+                qty: 100,
+                basePrice: 4.80
+            },
+            {
+                batch: "torno",
+                pos: "1.10",
+                article: "502 1015",
+                material: "F-114",
+                desc: "Heavy Duty Pivot Bolt - Silver Zinc Plating",
+                qty: 100,
+                basePrice: 8.90
+            },
+
+            // BATCH 2: MECANIZADO
+            {
+                batch: "mecanizado",
+                pos: "2.1",
+                article: "MET0111001",
+                material: "F-111",
+                desc: "Machined Bracket Setup - Silver Zinc Plating (Cincado Plata)",
+                qty: 25,
+                basePrice: 32.00
+            },
+            {
+                batch: "mecanizado",
+                pos: "2.2",
+                article: "MET0111002",
+                material: "F-111",
+                desc: "Machined Support plate - Silver Zinc Plating (Cincado Plata)",
+                qty: 25,
+                basePrice: 38.50
+            },
+            {
+                batch: "mecanizado",
+                pos: "2.3",
+                article: "MET2000314",
+                material: "F-125",
+                desc: "Specialized Quenched T3 Blocks + Black Oxide (Pavonado)",
+                qty: 20,
+                basePrice: 58.00
+            },
+            {
+                batch: "mecanizado",
+                pos: "2.4",
+                article: "MET8005205",
+                material: "F-112",
+                desc: "Milled Connection Flange + Black Oxide (Pavonado)",
+                qty: 165,
+                basePrice: 24.50
+            },
+            {
+                batch: "mecanizado",
+                pos: "2.5",
+                article: "MET8005206",
+                material: "F-112",
+                desc: "High-precision Guide Rail Plate + Black Oxide (Pavonado)",
+                qty: 90,
+                basePrice: 29.00
+            },
+            {
+                batch: "mecanizado",
+                pos: "2.6",
+                article: "MET8005215",
+                material: "F-112",
+                desc: "Spacer Link block + Black Oxide (Pavonado)",
+                qty: 90,
+                basePrice: 19.80
+            },
+            {
+                batch: "mecanizado",
+                pos: "2.7",
+                article: "MET8005217",
+                material: "F-112",
+                desc: "Dual-axis Swivel Base + Black Oxide (Pavonado)",
+                qty: 60,
+                basePrice: 42.00
+            },
+            {
+                batch: "mecanizado",
+                pos: "2.8",
+                article: "MET8005222",
+                material: "F-112",
+                desc: "Tensioner Block Assembly + Black Oxide (Pavonado)",
+                qty: 100,
+                basePrice: 31.20
+            },
+            {
+                batch: "mecanizado",
+                pos: "2.9",
+                article: "MET8005229",
+                material: "F-112",
+                desc: "Machined Clamp Support + Black Oxide (Pavonado)",
+                qty: 140,
+                basePrice: 27.50
+            },
+            {
+                batch: "mecanizado",
+                pos: "2.10",
+                article: "MET8005240",
+                material: "F-112",
+                desc: "Retainer End-Cap + Black Oxide (Pavonado)",
+                qty: 200,
+                basePrice: 18.40
+            },
+            {
+                batch: "mecanizado",
+                pos: "2.11",
+                article: "MET8005258",
+                material: "F-112",
+                desc: "Hinge Pin Housing + Black Oxide (Pavonado)",
+                qty: 90,
+                basePrice: 22.00
+            },
+            {
+                batch: "mecanizado",
+                pos: "2.12",
+                article: "MET8005261",
+                material: "F-112",
+                desc: "Coupling Connector + Black Oxide (Pavonado)",
+                qty: 40,
+                basePrice: 36.50
+            },
+            {
+                batch: "mecanizado",
+                pos: "2.13",
+                article: "MET8005262",
+                material: "F-112",
+                desc: "Angle Bracket Frame Component + Black Oxide (Pavonado)",
+                qty: 80,
+                basePrice: 28.00
+            },
+            {
+                batch: "mecanizado",
+                pos: "2.14",
+                article: "MET8005308",
+                material: "F-112",
+                desc: "Locking Jaw Base Block + Black Oxide (Pavonado)",
+                qty: 30,
+                basePrice: 48.00
+            },
+            {
+                batch: "mecanizado",
+                pos: "2.15",
+                article: "MET9000701",
+                material: "F-112",
+                desc: "Specialized Lateral Slider + Black Oxide (Pavonado)",
+                qty: 40,
+                basePrice: 44.50
+            },
+
+            // BATCH 3: CORTE Y PLEGADO
+            {
+                batch: "corte",
+                pos: "3.1",
+                article: "14310-2429_270510",
+                material: "S235",
+                desc: "Laser Cut & Bend Sheet Plate (Thickness E=5mm) + Silver Zinc",
+                qty: 1000,
+                basePrice: 6.80
+            },
+            {
+                batch: "corte",
+                pos: "3.2",
+                article: "502_0011",
+                material: "S235",
+                desc: "Laser Cut & Bend Structural Plate (Thickness E=5mm) + Silver Zinc",
+                qty: 1000,
+                basePrice: 7.20
+            },
+            {
+                batch: "corte",
+                pos: "3.3",
+                article: "MET0111003",
+                material: "LATON",
+                desc: "Brass Contact Element (Laton Custom Profiles Cutting)",
+                qty: 100,
+                basePrice: 4.50
+            },
+            {
+                batch: "corte",
+                pos: "3.4",
+                article: "MET0111004",
+                material: "LATON",
+                desc: "Brass Grounding Ring Component",
+                qty: 300,
+                basePrice: 3.90
+            },
+            {
+                batch: "corte",
+                pos: "3.5",
+                article: "MET80005204_B_0.5",
+                material: "INOX",
+                desc: "Stainless Steel Ultra-Thin Shim (Thickness 0.5mm)",
+                qty: 1000,
+                basePrice: 1.10
+            },
+            {
+                batch: "corte",
+                pos: "3.6",
+                article: "MET80005204_B_1",
+                material: "INOX",
+                desc: "Stainless Steel Precision Shim (Thickness 1.0mm)",
+                qty: 1000,
+                basePrice: 1.40
+            },
+            {
+                batch: "corte",
+                pos: "3.7",
+                article: "MET80005204_B_2",
+                material: "INOX",
+                desc: "Stainless Steel Structural Spacer (Thickness 2.0mm)",
+                qty: 500,
+                basePrice: 2.10
+            },
+            {
+                batch: "corte",
+                pos: "3.8",
+                article: "MET8005202_e_0.5",
+                material: "INOX",
+                desc: "Stainless Steel Dynamic Spring Sheet (Thickness 0.5mm)",
+                qty: 400,
+                basePrice: 1.65
+            },
+            {
+                batch: "corte",
+                pos: "3.9",
+                article: "MET8005202_e_1",
+                material: "INOX",
+                desc: "Stainless Steel Rigid Plate (Thickness 1.0mm)",
+                qty: 400,
+                basePrice: 2.10
+            },
+            {
+                batch: "corte",
+                pos: "3.10",
+                article: "MET8005202_e_2",
+                material: "INOX",
+                desc: "Stainless Steel heavy Duty Plate (Thickness 2.0mm)",
+                qty: 200,
+                basePrice: 3.20
+            },
+            {
+                batch: "corte",
+                pos: "3.11",
+                article: "MET8005235_e_0.5",
+                material: "INOX",
+                desc: "Stainless Steel Shielding Strip (Thickness 0.5mm)",
+                qty: 200,
+                basePrice: 1.80
+            },
+            {
+                batch: "corte",
+                pos: "3.12",
+                article: "MET8005235_e_1",
+                material: "INOX",
+                desc: "Stainless Steel Shielding Strip (Thickness 1.0mm)",
+                qty: 200,
+                basePrice: 2.40
+            },
+            {
+                batch: "corte",
+                pos: "3.13",
+                article: "MET8005235_e_2",
+                material: "INOX",
+                desc: "Stainless Steel Rigid Connector (Thickness 2.0mm)",
+                qty: 100,
+                basePrice: 3.60
+            },
+            {
+                batch: "corte",
+                pos: "3.14",
+                article: "MET8005238_e_0.5",
+                material: "INOX",
+                desc: "Stainless Steel Bending Profile (Thickness 0.5mm)",
+                qty: 1200,
+                basePrice: 1.95
+            },
+            {
+                batch: "corte",
+                pos: "3.15",
+                article: "MET8005238_e_1",
+                material: "INOX",
+                desc: "Stainless Steel Bending Profile (Thickness 1.0mm)",
+                qty: 1000,
+                basePrice: 2.50
+            },
+            {
+                batch: "corte",
+                pos: "3.16",
+                article: "MET8005238_e_2",
+                material: "INOX",
+                desc: "Stainless Steel heavy Bending Profile (Thickness 2.0mm)",
+                qty: 500,
+                basePrice: 3.90
+            },
+            {
+                batch: "corte",
+                pos: "3.17",
+                article: "MET8005244_e_0.5",
+                material: "INOX",
+                desc: "Stainless Steel Laser Cut Flange (Thickness 0.5mm)",
+                qty: 1000,
+                basePrice: 2.10
+            },
+            {
+                batch: "corte",
+                pos: "3.18",
+                article: "MET8005244_e_1",
+                material: "INOX",
+                desc: "Stainless Steel Laser Cut Flange (Thickness 1.0mm)",
+                qty: 1000,
+                basePrice: 2.80
+            },
+            {
+                batch: "corte",
+                pos: "3.19",
+                article: "MET8005244_e_2",
+                material: "INOX",
+                desc: "Stainless Steel heavy Flange Frame (Thickness 2.0mm)",
+                qty: 500,
+                basePrice: 4.20
+            }
+        ];
+
+        let rfqItems = [...initialBoMItems];
+        let screenPrintActive = false;
+
+        // Base values in original base EUR standard
+        let baseFreight = 350.00;
+        let baseCustoms = 120.00;
+
+        // Dynamic Currencies and Multipliers Config
+        const currencyConfigs = {
+            EUR: { symbol: '€', rate: 1.0, label: 'EUR' },
+            USD: { symbol: '$', rate: 1.08, label: 'USD' },
+            MAD: { symbol: 'MAD', rate: 10.85, label: 'MAD' }
+        };
+        let currentCurrency = 'EUR';
+
+        // Initialize App View State
+        window.onload = function() {
+            window.changeGlobalCurrency();
+            triggerToast("Metrolec Spain RFQ loaded successfully.", "fa-file-signature");
+        };
+
+        // Scroll layout container smoothly into screen view focus
+        function scrollPage(pageIndex) {
+            let el;
+            if (pageIndex === 1) {
+                el = document.getElementById('page1');
+            } else if (pageIndex === 2) {
+                el = document.getElementById('dynamicBomPages');
+            } else if (pageIndex === 3) {
+                el = document.getElementById('pageSignature');
+            }
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                triggerToast(`Scrolled focus to Page ${pageIndex}.`, "fa-arrow-pointer");
+            }
+        }
+
+        // Toggle clean screen view optimized to run the browser's native print menu easily
+        function togglePrintMode() {
+            screenPrintActive = !screenPrintActive;
+            
+            const body = document.body;
+            const aside = document.querySelector('aside');
+            const header = document.querySelector('header');
+            const footer = document.querySelector('footer');
+            const exitBtn = document.getElementById('exitPrintModeBtn');
+
+            if (screenPrintActive) {
+                body.classList.add('screen-print-active');
+                header.classList.add('hidden');
+                aside.classList.add('hidden');
+                footer.classList.add('hidden');
+                exitBtn.classList.remove('hidden');
+                document.getElementById('appToast').classList.add('hidden');
+            } else {
+                body.classList.remove('screen-print-active');
+                header.classList.remove('hidden');
+                aside.classList.remove('hidden');
+                footer.classList.remove('hidden');
+                exitBtn.classList.add('hidden');
+                document.getElementById('appToast').classList.remove('hidden');
+                triggerToast("Returned to Editor View.", "fa-laptop-code");
+            }
+        }
+
+        // Bulletproof Client-Side PDF Compiler Exporter Bypasses Iframe Restrictions Entirely
+        function exportInvoiceToPDF() {
+            const element = document.getElementById('entirePrintableSuite');
+            
+            triggerToast("Compiling PDF assets...", "fa-hourglass-half");
+
+            // Strip the vertical margin-bottom and box-shadow styling temporarily so they do not cause blank pages in html2pdf
+            const pages = element.querySelectorAll('.a4-page');
+            pages.forEach(p => {
+                p.style.marginBottom = '0px';
+                p.style.marginTop = '0px';
+                p.style.boxShadow = 'none';
+            });
+
+            // Explicit render configurations for high precision prints
+            const options = {
+                margin:       [0, 0, 0, 0], // Perfectly edge-to-edge A4 boundaries
+                filename:     'MecMaroc_Metrolec_DDP_Quotation.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { 
+                    scale: 2, 
+                    useCORS: true, 
+                    letterRendering: true,
+                    scrollX: 0,
+                    scrollY: 0
+                },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                // Safe and robust pagebreaking mode breaks PRECISELY at each .a4-page block element boundary
+                pagebreak:    { mode: 'before', before: '.a4-page' } 
+            };
+
+            // Run compiler and trigger direct browser file stream download
+            html2pdf().set(options).from(element).save()
+                .then(() => {
+                    triggerToast("PDF downloaded successfully!", "fa-circle-check");
+                    // Restore on-screen margins for high fidelity screen experience
+                    pages.forEach(p => {
+                        p.style.marginBottom = '30px';
+                        p.style.marginTop = '';
+                        p.style.boxShadow = '';
+                    });
+                })
+                .catch(err => {
+                    console.error("PDF engine crash detail: ", err);
+                    triggerToast("PDF compiled error. Please use Screen Print View instead.", "fa-triangle-exclamation");
+                    // Restore margins even on error
+                    pages.forEach(p => {
+                        p.style.marginBottom = '30px';
+                        p.style.marginTop = '';
+                        p.style.boxShadow = '';
+                    });
+                });
+        }
+
+        // Focused system print callback bypasses sandboxed frame constraints
+        function triggerSystemPrint() {
+            try {
+                triggerToast("Preparing print frames...", "fa-hourglass-half");
+                window.focus();
+                setTimeout(() => {
+                    window.print();
+                }, 250);
+            } catch (err) {
+                // Friendly error banner warning
+                triggerToast("Browser blocked standard frame print. Try toggling 'Screen Print View'!", "fa-circle-exclamation");
+            }
+        }
+
+        // Filter batch displays dynamically
+        function filterBatchViews() {
+            renderBoM();
+            triggerToast("Updated active quote item calculation.", "fa-filter");
+        }
+
+        // Global Currency Switcher
+        window.changeGlobalCurrency = function() {
+            currentCurrency = document.getElementById('inputCurrencySelect').value;
+            const cfg = currencyConfigs[currentCurrency];
+            
+            // Update input label symbols inside side panel config
+            document.getElementById('freightCurrencyLabel').innerText = `(${cfg.symbol})`;
+            document.getElementById('customsCurrencyLabel').innerText = `(${cfg.symbol})`;
+            
+            // Automatically scale displayed input values based on currency rate
+            document.getElementById('inputDdpFreight').value = (baseFreight * cfg.rate).toFixed(2);
+            document.getElementById('inputDdpCustoms').value = (baseCustoms * cfg.rate).toFixed(2);
+
+            renderBoM();
+        }
+
+        // Local variable setters converts on-screen input back to base EUR standard
+        window.updateFreight = function(val) {
+            const rate = currencyConfigs[currentCurrency].rate;
+            baseFreight = (parseFloat(val) || 0) / rate;
+            runCalculations();
+        }
+
+        window.updateCustoms = function(val) {
+            const rate = currencyConfigs[currentCurrency].rate;
+            baseCustoms = (parseFloat(val) || 0) / rate;
+            runCalculations();
+        }
+
+        // Dynamic BOM Page rendering chunker to guarantee A4 limits are respected
+        function renderBoM() {
+            const dynamicContainer = document.getElementById('dynamicBomPages');
+            dynamicContainer.innerHTML = '';
+
+            const showTorno = document.getElementById('toggleTorno').checked;
+            const showMecanizado = document.getElementById('toggleMecanizado').checked;
+            const showCorte = document.getElementById('toggleCorte').checked;
+
+            // Generate list of active filtered items with their actual initial array index
+            const filtered = [];
+            rfqItems.forEach((item, index) => {
+                if (item.batch === 'torno' && !showTorno) return;
+                if (item.batch === 'mecanizado' && !showMecanizado) return;
+                if (item.batch === 'corte' && !showCorte) return;
+                filtered.push({ item, rawIndex: index });
+            });
+
+            const itemsPerPage = 15; // Calculated safe maximum limit for one single page block
+            const totalBomPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+            const totalOverallPages = 1 + totalBomPages + 1; // Cover Page + BOM Sheets + Signature Contract Page
+
+            // Update dynamic values in Cover and Signature pages
+            document.querySelectorAll('.total-page-count').forEach(el => {
+                el.innerText = totalOverallPages;
+            });
+            const sigPageNumText = document.getElementById('sigPageCurrent');
+            const sigPageTotalText = document.getElementById('sigPageTotal');
+            if (sigPageNumText) sigPageNumText.innerText = totalOverallPages;
+            if (sigPageTotalText) sigPageTotalText.innerText = totalOverallPages;
+
+            const cfg = currencyConfigs[currentCurrency];
+
+            // Loop and build A4 compliant sheets
+            for (let pageNum = 0; pageNum < totalBomPages; pageNum++) {
+                const startIdx = pageNum * itemsPerPage;
+                const endIdx = Math.min(startIdx + itemsPerPage, filtered.length);
+                const pageItems = filtered.slice(startIdx, endIdx);
+
+                const pageSection = document.createElement('section');
+                pageSection.className = "a4-page relative overflow-hidden pdf-page-break flex flex-col justify-between print-border-none";
+                
+                // Construct the row templates inside this page limits
+                let rowsHtml = "";
+                let globalRowCount = startIdx + 1;
+
+                pageItems.forEach(entry => {
+                    const item = entry.item;
+                    const index = entry.rawIndex;
+                    
+                    let batchBadge = "";
+                    if (item.batch === 'torno') {
+                        batchBadge = "<span class='px-1.5 py-0.5 rounded text-[8px] bg-sky-100 text-sky-800 font-bold'>TORNO</span>";
+                    } else if (item.batch === 'mecanizado') {
+                        batchBadge = "<span class='px-1.5 py-0.5 rounded text-[8px] bg-purple-100 text-purple-800 font-bold'>MECAN</span>";
+                    } else {
+                        batchBadge = "<span class='px-1.5 py-0.5 rounded text-[8px] bg-amber-100 text-amber-800 font-bold'>CORTE</span>";
+                    }
+
+                    // Convert raw base price to active converted values
+                    const convertedUnitPrice = item.basePrice * cfg.rate;
+                    const convertedRowTotal = (item.qty * item.basePrice) * cfg.rate;
+
+                    rowsHtml += `
+                        <tr class="bg-white hover:bg-slate-50 transition duration-150 relative group border-b border-slate-100">
+                            <td class="py-2 px-2 text-center font-bold text-slate-400 font-mono text-[10px]">${globalRowCount++}</td>
+                            <td class="py-2 px-2 font-mono font-bold text-[10px] text-slate-900">
+                                <span contenteditable="true" onblur="window.updateItemField(${index}, 'article', this.innerText)" class="hover:bg-slate-100 px-1 rounded outline-none focus:bg-yellow-50">${item.article}</span>
+                            </td>
+                            <td class="py-2 px-2 font-mono text-[10px]">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="font-bold text-slate-700">${item.material}</span>
+                                    ${batchBadge}
+                                </div>
+                            </td>
+                            <td class="py-2 px-3">
+                                <div contenteditable="true" onblur="window.updateItemField(${index}, 'desc', this.innerText)" class="font-medium text-slate-900 outline-none hover:bg-slate-100 p-0.5 rounded focus:bg-yellow-50">${item.desc}</div>
+                            </td>
+                            <td class="py-2 px-2 text-center">
+                                <input type="number" step="1" value="${item.qty}" oninput="window.updateItemQty(${index}, this.value)" class="w-16 text-center bg-transparent focus:bg-white border border-transparent hover:border-slate-300 rounded font-bold text-slate-800 outline-none p-0.5 transition font-mono">
+                            </td>
+                            <td class="py-2 px-2 text-center font-mono font-bold text-slate-400 text-[10.5px]">
+                                ${cfg.symbol}
+                            </td>
+                            <td class="py-2 px-2 text-right">
+                                <input type="number" step="0.01" value="${convertedUnitPrice.toFixed(2)}" oninput="window.updateItemPrice(${index}, this.value)" class="w-16 text-right bg-transparent focus:bg-white border border-transparent hover:border-slate-300 rounded font-bold outline-none p-0.5 transition font-mono">
+                            </td>
+                            <td class="py-2 px-3 text-right font-bold font-mono text-slate-900 animate-fade-in" id="row-total-${index}">
+                                ${convertedRowTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                // Attach total block only on the final BOM page
+                const isLastPage = (pageNum === totalBomPages - 1);
+                let bottomPanelHtml = "";
+
+                if (isLastPage) {
+                    bottomPanelHtml = `
+                        <div class="flex justify-between items-start">
+                            <div class="text-[9px] text-slate-400 max-w-[45%] leading-relaxed font-sans">
+                                Prices are established on an individual component delivery basis (DDP Metrolec). Under Incoterm regulations, transport & duty clearance actions are processed directly by MecMaroc logistics.
+                            </div>
+                            
+                            <!-- Financial Calculation Summary Panel -->
+                            <div class="bg-slate-50 border border-slate-200 p-3 rounded w-72 flex flex-col gap-1.5 shadow-sm">
+                                <div class="flex justify-between text-slate-600 text-[11px]">
+                                    <span>Materials & Machining Base:</span>
+                                    <span id="baseValue" class="mono-font">0.00 EUR</span>
+                                </div>
+                                <div class="flex justify-between text-slate-600 text-[11px]">
+                                    <span>DDP Logistics & Customs:</span>
+                                    <span id="logisticsValue" class="mono-font">0.00 EUR</span>
+                                </div>
+                                <div class="flex justify-between text-slate-600 font-bold text-xs">
+                                    <span>Total Net (HT):</span>
+                                    <span id="subtotalValue" class="mono-font">0.00 EUR</span>
+                                </div>
+                                <div class="flex justify-between text-slate-500 text-[11px] border-b border-slate-200 pb-1.5">
+                                    <span>Spanish VAT (<span id="vatPercentValue">21%</span>):</span>
+                                    <span id="vatValue" class="mono-font">0.00 EUR</span>
+                                </div>
+                                <div class="flex justify-between text-slate-950 font-black text-xs pt-1">
+                                    <span>GRAND TOTAL (TTC):</span>
+                                    <span id="grandTotalValue" class="mono-font text-rose-600">0.00 EUR</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    bottomPanelHtml = `
+                        <div class="flex justify-between items-center text-[9px] text-slate-400 pt-1 font-sans">
+                            <span>* Batch specifications carried forward onto the following sheets.</span>
+                            <span class="mono-font uppercase font-bold tracking-wider text-[8px] text-slate-500">Continuous Section</span>
+                        </div>
+                    `;
+                }
+
+                const currentOverallPage = 1 + pageNum + 1; // 1-based Cover + page iteration index
+
+                pageSection.innerHTML = `
+                    <div class="fea-gradient absolute top-0 left-0 right-0"></div>
+                    
+                    <div class="flex flex-col gap-4 pt-2">
+                        <!-- Mini Page Header -->
+                        <div class="flex justify-between items-center border-b border-slate-200 pb-3">
+                            <span class="text-xs font-extrabold text-slate-500 uppercase tracking-widest">Metrolec Detailed Line-Item Quotation</span>
+                            <span class="text-xs text-slate-500 font-mono">RFQ Reference: <strong>MM-2026-0604</strong></span>
+                        </div>
+
+                        <!-- Itemized Pricing Table with Dedicated Currency Column -->
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-900 text-white text-[8px] uppercase tracking-widest font-bold">
+                                        <th class="py-2 px-2 text-center" style="width: 5%;">Pos.</th>
+                                        <th class="py-2 px-2" style="width: 15%;">Reference</th>
+                                        <th class="py-2 px-2" style="width: 12%;">Material / Code</th>
+                                        <th class="py-2 px-3" style="width: 36%;">Treatment / Thickness / Description</th>
+                                        <th class="py-2 px-2 text-center" style="width: 8%;">Qty</th>
+                                        <th class="py-2 px-2 text-center" style="width: 8%;">Curr.</th>
+                                        <th class="py-2 px-2 text-right" style="width: 10%;">Unit</th>
+                                        <th class="py-2 px-3 text-right" style="width: 10%;">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 text-[10px] text-slate-800">
+                                    ${rowsHtml}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Footers pushed dynamically to baseline -->
+                    <div class="flex flex-col gap-3 pt-4 border-t border-slate-200 mt-auto">
+                        ${bottomPanelHtml}
+                        <div class="text-[9px] text-slate-400 text-center font-sans">
+                            MecMaroc Engineering SAS • Capital of 100,000 EUR • RCS Casablanca 801 621 798<br>
+                            <strong>MecMaroc SAS • Page ${currentOverallPage} of ${totalOverallPages}</strong>
+                        </div>
+                    </div>
+                `;
+
+                dynamicContainer.appendChild(pageSection);
+            }
+
+            runCalculations();
+        }
+
+        // Live contenteditable text handler
+        window.updateItemField = function(index, key, val) {
+            rfqItems[index][key] = val;
+            runCalculations();
+        }
+
+        // Live quantity modifier
+        window.updateItemQty = function(index, val) {
+            rfqItems[index].qty = parseInt(val) || 0;
+            const cfg = currencyConfigs[currentCurrency];
+            const rowTotal = (rfqItems[index].qty * rfqItems[index].basePrice) * cfg.rate;
+            const rowEl = document.getElementById(`row-total-${index}`);
+            if (rowEl) {
+                rowEl.innerText = `${rowTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            }
+            runCalculations();
+        }
+
+        // Live price modifier converts active edited currency price back to base EUR standard
+        window.updateItemPrice = function(index, val) {
+            const cfg = currencyConfigs[currentCurrency];
+            const numericVal = parseFloat(val) || 0;
+            rfqItems[index].basePrice = numericVal / cfg.rate;
+            
+            const rowTotal = (rfqItems[index].qty * rfqItems[index].basePrice) * cfg.rate;
+            const rowEl = document.getElementById(`row-total-${index}`);
+            if (rowEl) {
+                rowEl.innerText = `${rowTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            }
+            runCalculations();
+        }
+
+        // Dynamic pricing & DDP logistics calculation engine with Exchange Multipliers
+        function runCalculations() {
+            let totalBaseHt = 0;
+
+            const showTorno = document.getElementById('toggleTorno').checked;
+            const showMecanizado = document.getElementById('toggleMecanizado').checked;
+            const showCorte = document.getElementById('toggleCorte').checked;
+
+            rfqItems.forEach(item => {
+                if (item.batch === 'torno' && !showTorno) return;
+                if (item.batch === 'mecanizado' && !showMecanizado) return;
+                if (item.batch === 'corte' && !showCorte) return;
+
+                totalBaseHt += (item.qty * item.basePrice);
+            });
+
+            // Retrieve logistics standard costs
+            const totalLogistics = baseFreight + baseCustoms;
+
+            // Compute cumulative data
+            const subtotalHt = totalBaseHt + totalLogistics;
+            const vatRate = parseInt(document.getElementById('inputVatSelect').value) || 0;
+            const vatValue = subtotalHt * (vatRate / 100);
+            const grandTotalTtc = subtotalHt + vatValue;
+
+            // Retrieve active currency standard options
+            const cfg = currencyConfigs[currentCurrency];
+            const label = cfg.label;
+
+            // Render calculation panel elements only if they are loaded on the dynamic DOM
+            const baseValEl = document.getElementById('baseValue');
+            const logValEl = document.getElementById('logisticsValue');
+            const subValEl = document.getElementById('subtotalValue');
+            const vatPctEl = document.getElementById('vatPercentValue');
+            const vatValEl = document.getElementById('vatValue');
+            const grndTotEl = document.getElementById('grandTotalValue');
+
+            if (baseValEl) baseValEl.innerText = `${(totalBaseHt * cfg.rate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${label}`;
+            if (logValEl) logValEl.innerText = `${(totalLogistics * cfg.rate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${label}`;
+            if (subValEl) subValEl.innerText = `${(subtotalHt * cfg.rate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${label}`;
+            if (vatPctEl) vatPctEl.innerText = `${vatRate}%`;
+            if (vatValEl) vatValEl.innerText = `${(vatValue * cfg.rate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${label}`;
+            if (grndTotEl) grndTotEl.innerText = `${(grandTotalTtc * cfg.rate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${label}`;
+        }
+
+        // Clean Toast Messaging to bypass iframe alert limits
+        function triggerToast(text, fontAwesomeIcon = "fa-bell") {
+            const toast = document.getElementById('appToast');
+            const msg = document.getElementById('toastMessage');
+            const icon = document.getElementById('toastIcon');
+
+            if (!toast || toast.classList.contains('hidden')) return;
+
+            msg.innerText = text;
+            icon.className = `fa-solid ${fontAwesomeIcon} text-rose-400`;
+
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
