@@ -5,13 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MecMaroc - High-Precision PO Contract Studio</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Questrial&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Questrial&family=JetBrains+Mono:wght@400;700&display=swap\" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
         body {
-            /* Century Gothic system stack with high-fidelity geometric fallbacks */
             font-family: 'Century Gothic', 'Questrial', 'CenturyGothic', 'AppleGothic', 'URW Gothic L', sans-serif;
             background-color: #0b0f19;
             transition: background-color 0.3s ease;
@@ -21,598 +20,311 @@
             font-family: 'JetBrains Mono', monospace;
         }
 
-        /* Finite Element Analysis (FEA) Contour Gradient bar styling */
-        .fea-gradient {
-            background: linear-gradient(90deg, 
-                #1e3a8a 0%,   /* Low Stress (Deep Blue) */
-                #06b6d4 25%,  /* Mid-Low (Cyan) */
-                #10b981 50%,  /* Optimal (Green) */
-                #f59e0b 75%,  /* Yield point (Yellow) */
-                #ef4444 100%  /* High Stress / Max Limit (Red) */
-            );
-            height: 6px;
-        }
-
-        /* Absolute A4 Simulation styles for on-screen paper presentation with zero overlap */
-        .a4-page {
-            background: #ffffff;
-            color: #1e293b;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-            width: 210mm;
-            height: 296mm; /* Sized 1mm shorter than full A4 height as a safety margin to prevent accidental double page breaks */
-            padding: 15mm 15mm;
-            margin: 0 auto;
-            position: relative;
-            box-sizing: border-box;
-            transition: box-shadow 0.3s ease;
-            
-            /* CSS Flex column layouts to align the header, body, and footer beautifully */
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            overflow: hidden; /* Prevent spill overflow rendering as blank pages */
-        }
-
-        /* Screen spacing page margins to preview content visually */
-        #entirePrintableSuite .a4-page {
-            margin-bottom: 30px;
-        }
-
-        /* Avoid trailing blank page after the signature page */
-        #pageSignature {
-            page-break-after: avoid !important;
-            break-after: avoid !important;
-        }
-
-        /* Screen Print View Active Overrides */
-        .screen-print-active {
-            background-color: #334155 !important;
-        }
-        
-        .screen-print-active .a4-page {
-            box-shadow: 0 20px 40px rgba(0,0,0,0.6) !important;
-            margin-top: 20px !important;
-            margin-bottom: 20px !important;
-        }
-
-        /* Page breaks and cleanup during official export or print */
+        /* Print optimization overrides */
         @media print {
-            body {
-                background-color: #ffffff !important;
-                color: #000000 !important;
-                padding: 0 !important;
-            }
-            .no-print {
-                display: none !important;
-            }
-            #entirePrintableSuite .a4-page {
-                box-shadow: none !important;
-                border: none !important;
-                padding: 15mm 15mm !important;
-                margin: 0 !important;
-                width: 100% !important;
-                height: 296mm !important;
-                page-break-after: always !important;
-                break-after: always !important;
-            }
-            #entirePrintableSuite #pageSignature {
-                page-break-after: avoid !important;
-                break-after: avoid !important;
-            }
-            input, select, textarea {
-                border: none !important;
-                background: transparent !important;
-                padding: 0 !important;
-                appearance: none !important;
-                -webkit-appearance: none !important;
-            }
-            .print-border-none {
-                border: none !important;
-            }
+            body { background-color: #ffffff !important; color: #000000 !important; }
+            .no-print { display: none !important; }
+            .print-border { border: 1px solid #e2e8f0 !important; }
+            .editable-zone { border: none !important; background: transparent !important; padding: 0 !important; }
         }
 
-        /* Custom scrollbars for a clean workspace darkmode */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #0f172a;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #1e293b;
-            border-radius: 3px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #334155;
+        /* Focus styles for inline editing */
+        .editable-zone:focus {
+            outline: 2px dashed #3b82f6;
+            background-color: rgba(59, 130, 246, 0.05);
+            border-radius: 4px;
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col text-slate-100">
+<body class="text-slate-200 min-h-screen flex flex-col antialiased selection:bg-blue-500/30">
 
-    <div id="exitPrintModeBtn" class="hidden no-print bg-amber-500 text-slate-950 px-6 py-3 font-bold text-xs sticky top-0 z-50 flex items-center justify-between shadow-xl border-b border-amber-600">
-        <div class="flex items-center gap-2">
-            <i class="fa-solid fa-triangle-exclamation text-sm animate-pulse"></i>
-            <span>SCREEN PRINT VIEW ACTIVE (Optimized for perfect PDF generation).</span>
+    <header class="no-print bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50 px-6 py-4 flex flex-wrap justify-between items-center gap-4">
+        <div class="flex items-center gap-3">
+            <div class="h-9 w-9 bg-gradient-to-tr from-blue-600 to-cyan-400 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <i class="fa-solid fa-file-contract text-white text-sm"></i>
+            </div>
+            <div>
+                <h1 class="text-sm font-bold tracking-wider text-white uppercase">MecMaroc</h1>
+                <p class="text-xs text-slate-400">Dynamic PO Studio &bull; Pro Edition</p>
+            </div>
         </div>
-        <div class="flex items-center gap-4">
-            <span class="hidden md:inline text-[11px] text-slate-800 font-normal">Press Ctrl+P / Cmd+P, or right-click sheet & select 'Print' to save as PDF.</span>
-            <button onclick="togglePrintMode()" class="bg-slate-950 hover:bg-slate-900 text-white px-4 py-1.5 rounded transition uppercase tracking-wider text-[10px]">
-                <i class="fa-solid fa-right-from-bracket mr-1"></i> Exit Print Mode
+
+        <div class="flex items-center gap-3">
+            <div class="bg-slate-950/60 border border-slate-800 rounded-lg px-3 py-1.5 flex items-center gap-2">
+                <label for="currencySelect" class="text-xs font-mono text-slate-400 uppercase">Currency:</label>
+                <select id="currencySelect" onchange="updateCurrencyDisplay()" class="bg-transparent text-xs font-bold text-blue-400 focus:outline-none cursor-pointer">
+                    <option value="MAD" data-rate="1.0" selected>MAD (DH)</option>
+                    <option value="EUR" data-rate="0.091">EUR (€)</option>
+                    <option value="USD" data-rate="0.098">USD ($)</option>
+                </select>
+            </div>
+
+            <button onclick="exportToPDF()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all flex items-center gap-2 shadow-lg shadow-blue-600/20 active:scale-95">
+                <i class="fa-solid fa-file-pdf"></i> Export Document
             </button>
-        </div>
-    </div>
-
-    <header class="no-print bg-slate-900/95 backdrop-blur border-b border-slate-800 sticky top-0 z-40 px-6 py-4">
-        <div class="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-4">
-            
-            <div class="flex items-center gap-4">
-                <div class="bg-slate-950 p-2.5 px-4 rounded-lg border border-slate-800 flex items-center justify-center">
-                    <div class="flex items-center gap-1.5 font-sans select-none">
-                        <span class="text-rose-600 font-black tracking-tighter leading-none" style="font-family: 'Century Gothic', Arial, sans-serif; font-size: 38px; font-weight: 900;">M</span>
-                        <div class="flex flex-col justify-end -ml-0.5 leading-none" style="margin-bottom: 4px;">
-                            <span class="text-slate-300 font-extrabold tracking-tight uppercase leading-none" style="font-family: 'Century Gothic', Arial, sans-serif; font-weight: 800; font-size: 18px;">ec</span>
-                            <span class="text-rose-500 font-black tracking-widest uppercase leading-none" style="font-family: 'Century Gothic', Arial, sans-serif; font-weight: 900; font-size: 9px; margin-top: 1px;">Maroc</span>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <h1 class="text-md font-black tracking-wider flex items-center gap-2 text-white font-sans">
-                        MecMaroc <span class="text-[10px] tracking-widest bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded font-bold">ESTIMATION SUITE</span>
-                    </h1>
-                    <p class="text-xs text-slate-400">B2B RFQ Quotation Engine for Metrolec Spain</p>
-                </div>
-            </div>
-            
-            <div class="flex flex-wrap items-center gap-3 justify-end w-full lg:w-auto">
-                <button onclick="scrollPage('page1')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3 py-2 rounded-lg border border-slate-700 transition flex items-center gap-1.5 font-medium">
-                    <i class="fa-solid fa-file-invoice"></i> Page 1
-                </button>
-                <button onclick="scrollPage('page2')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3 py-2 rounded-lg border border-slate-700 transition flex items-center gap-1.5 font-medium">
-                    <i class="fa-solid fa-list-check"></i> BOM Table
-                </button>
-                <button onclick="scrollPage('pageSignature')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3 py-2 rounded-lg border border-slate-700 transition flex items-center gap-1.5 font-medium">
-                    <i class="fa-solid fa-handshake"></i> Authorization
-                </button>
-
-                <div class="h-6 w-px bg-slate-800 hidden md:block"></div>
-
-                <button onclick="togglePrintMode()" class="bg-slate-800 hover:bg-slate-700 text-rose-400 text-xs px-3.5 py-2 rounded-lg border border-rose-500/30 transition flex items-center gap-1.5 font-bold">
-                    <i class="fa-solid fa-eye"></i> Screen Print View
-                </button>
-
-                <button onclick="exportInvoiceToPDF()" class="bg-gradient-to-r from-rose-600 to-amber-500 hover:from-rose-700 hover:to-amber-600 text-white font-bold px-5 py-2 rounded-lg shadow-lg shadow-rose-500/10 transition flex items-center gap-2 text-xs uppercase tracking-wider">
-                    <i class="fa-solid fa-download"></i> Export PDF File
-                </button>
-            </div>
         </div>
     </header>
 
-    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 flex flex-col lg:flex-row gap-6 items-start justify-center">
+    <main class="flex-1 max-w-5xl w-full mx-auto p-4 md:p-8">
         
-        <aside class="no-print w-full lg:w-80 bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col gap-6 shrink-0 font-sans">
-            <div>
-                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-                    <i class="fa-solid fa-calculator text-rose-500"></i> DDP Valladolid Logistics
-                </h3>
-                <p class="text-[11px] text-slate-500 mt-1">Configure shipping markup, regulatory taxes & currency exchange to Spain.</p>
-            </div>
-
-            <hr class="border-slate-800">
-
-            <div class="flex flex-col gap-3">
-                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <i class="fa-solid fa-coins text-amber-500"></i> Quote Currency Standard
-                </label>
-                <div>
-                    <span class="block text-[10px] text-slate-500 mb-1">Select Output Currency:</span>
-                    <select id="inputCurrencySelect" onchange="changeGlobalCurrency()" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs text-white focus:outline-none focus:border-rose-500 font-bold">
-                        <option value="EUR" selected>Euro (€)</option>
-                        <option value="USD">US Dollar ($)</option>
-                        <option value="MAD">Moroccan Dirham (MAD)</option>
-                    </select>
-                </div>
-            </div>
-
-            <hr class="border-slate-800">
-
-            <div class="flex flex-col gap-3">
-                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Metrolec Incoterms Settings</label>
-                <div>
-                    <span class="block text-[10px] text-slate-500 mb-1">DDP Spain Freight Cost (<span class="currency-label">€</span>):</span>
-                    <input type="number" id="inputDdpFreight" value="350.00" oninput="recalculateTotals()" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs text-white focus:outline-none focus:border-rose-500 font-mono">
-                </div>
-                <div>
-                    <span class="block text-[10px] text-slate-500 mb-1">Import Handling & Customs (<span class="currency-label">€</span>):</span>
-                    <input type="number" id="inputDdpCustoms" value="120.00" oninput="recalculateTotals()" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs text-white focus:outline-none focus:border-rose-500 font-mono">
-                </div>
-                <div>
-                    <span class="block text-[10px] text-slate-500 mb-1">Regulatory VAT Rate (%):</span>
-                    <input type="number" id="inputVatRate" value="20" oninput="recalculateTotals()" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs text-white focus:outline-none focus:border-rose-500 font-mono">
-                </div>
-            </div>
-
-            <hr class="border-slate-800">
-
-            <div class="flex flex-col gap-3">
-                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <i class="fa-solid fa-folder-plus text-rose-500"></i> Inject New Item
-                </label>
-                <div>
-                    <span class="block text-[10px] text-slate-500 mb-1">Part Reference / Code:</span>
-                    <input type="text" id="addPartRef" value="MEC-2026-X1" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs text-white focus:outline-none focus:border-rose-500 font-mono">
-                </div>
-                <div>
-                    <span class="block text-[10px] text-slate-500 mb-1">Description / Technical Scope:</span>
-                    <input type="text" id="addPartDesc" value="Simulation-driven custom high-pressure seal flange" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs text-white focus:outline-none focus:border-rose-500">
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <span class="block text-[10px] text-slate-500 mb-1">Quantity:</span>
-                        <input type="number" id="addPartQty" value="1" min="1" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs text-white focus:outline-none focus:border-rose-500 font-mono">
-                    </div>
-                    <div>
-                        <span class="block text-[10px] text-slate-500 mb-1">Unit Price (<span class="currency-label">€</span>):</span>
-                        <input type="number" id="addPartPrice" value="450.00" step="0.01" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs text-white focus:outline-none focus:border-rose-500 font-mono">
-                    </div>
-                </div>
-                <button onclick="addNewBOMRow()" class="w-full mt-2 bg-gradient-to-r from-rose-600 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white text-xs font-bold py-2 px-4 rounded-lg shadow-md transition flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-plus-circle"></i> Add to BOM Array
-                </button>
-            </div>
-        </aside>
-
-        <div id="entirePrintableSuite" class="flex-1 max-w-[210mm]">
+        <div id="poDocumentSheet" class="bg-slate-900 print-border rounded-xl border border-slate-800 shadow-2xl p-6 md:p-10 transition-all duration-300 relative overflow-hidden">
             
-            <section id="page1" class="a4-page mb-8">
-                <div>
-                    <div class="fea-gradient rounded mb-6"></div>
-                    
-                    <div class="flex justify-between items-start mb-8">
-                        <div>
-                            <div class="flex items-center gap-1.5 font-sans select-none mb-1">
-                                <span class="text-rose-600 font-black tracking-tighter leading-none" style="font-family: 'Century Gothic', Arial, sans-serif; font-size: 34px; font-weight: 900;">M</span>
-                                <div class="flex flex-col justify-end -ml-0.5 leading-none" style="margin-bottom: 3px;">
-                                    <span class="text-slate-900 font-extrabold tracking-tight uppercase leading-none" style="font-family: 'Century Gothic', Arial, sans-serif; font-weight: 800; font-size: 16px;">ec</span>
-                                    <span class="text-rose-500 font-black tracking-widest uppercase leading-none" style="font-family: 'Century Gothic', Arial, sans-serif; font-weight: 900; font-size: 8px; margin-top: 1px;">Maroc</span>
-                                </div>
-                            </div>
-                            <p class="text-[10px] text-slate-400 tracking-wider uppercase font-medium">Bureau d'Études & Fabrication Spécialisée</p>
-                        </div>
-                        <div class="text-right">
-                            <h2 class="text-xl font-black text-slate-900 tracking-widest uppercase">B2B Proforma Contract</h2>
-                            <p class="text-xs font-mono text-slate-500 mt-0.5">Ref: #MM-2026-DDP08</p>
-                            <p class="text-[10px] text-slate-400 font-mono">Date: June 08, 2026</p>
-                        </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 border-b border-slate-800/60 pb-8">
+                
+                <div class="space-y-3">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl font-bold tracking-tight text-white editable-zone" contenteditable="true" spellcheck="false">MecMaroc Industrial</span>
                     </div>
-
-                    <div class="grid grid-cols-2 gap-6 mb-8 text-xs">
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                            <span class="text-[9px] font-mono font-bold text-slate-400 uppercase tracking-widest block mb-1">Industrial Issuer</span>
-                            <p class="font-bold text-slate-800">MecMaroc Engineering Bureau</p>
-                            <p class="text-slate-500 mt-0.5 leading-relaxed">Gzenaya Industrial Zone, Lot 418<br>Tangier, Morocco<br><span class="font-mono text-[11px]">contact@mecmaroc.com</span></p>
-                        </div>
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                            <span class="text-[9px] font-mono font-bold text-slate-400 uppercase tracking-widest block mb-1">Consignee Target / Destination</span>
-                            <div id="editableDestination" contenteditable="true" class="font-bold text-slate-800 focus:outline-none focus:bg-slate-100 rounded p-0.5 min-h-[50px] leading-relaxed">
-                                Metrolec S.L.<br>Calle del Plomo, Polígono Industrial San Cristóbal<br>47012 Valladolid, Spain
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mb-6">
-                        <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">1. Scope of Validation & Engineering Deliverables</h3>
-                        <p class="text-xs text-slate-600 leading-relaxed mb-3">
-                            This binding proforma legal outline details the precise bill of materials structural supply chain provision configured for the automated lines inside the Valladolid facility. Every machined item listed has been subjected to complete engineering verification workflows to maintain absolute runtime tolerances under sustained industrial load criteria.
-                        </p>
-                        <p class="text-xs text-slate-600 leading-relaxed">
-                            Pricing standard configurations are calculated fully under **Incoterms 2020 DDP (Delivered Duty Paid)**. Logistics parameters cover point-to-point physical transit loops from Morocco, ocean shipping clearances, border import documentation protocols, and localized delivery components.
-                        </p>
+                    <div class="text-xs text-slate-400 space-y-1 font-sans leading-relaxed">
+                        <p class="editable-zone" contenteditable="true" spellcheck="false">Boulevard Mohammed V, N° 45</p>
+                        <p class="editable-zone" contenteditable="true" spellcheck="false">Casablanca, 20000 &bull; Morocco</p>
+                        <p class="mono-font text-[11px] text-slate-500">Contact: <span class="text-slate-400 editable-zone" contenteditable="true">contact@mecmaroc.com</span></p>
+                        <p class="mono-font text-[11px] text-slate-500">ICE: <span class="text-slate-400 editable-zone" contenteditable="true">001524389000073</span></p>
                     </div>
                 </div>
 
-                <div class="border-t border-slate-100 pt-3 flex justify-between items-center text-[10px] text-slate-400 font-mono">
-                    <span>MecMaroc Studio V1.2</span>
-                    <span>Document Page 1 / 3</span>
-                </div>
-            </section>
-
-            <section id="page2" class="a4-page mb-8">
-                <div>
-                    <div class="flex justify-between items-center border-b border-slate-200 pb-3 mb-6">
-                        <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                            <i class="fa-solid fa-list-check text-rose-600"></i> 2. High-Precision Mechanical Bill of Materials (BOM)
+                <div class="md:text-right flex flex-col justify-between items-start md:items-end">
+                    <div class="w-full">
+                        <span class="text-xs font-bold uppercase tracking-widest text-blue-400 mono-font">Purchase Order Contract</span>
+                        <h2 class="text-2xl md:text-3xl font-light text-white tracking-tight mt-1">
+                            #PO-<span class="editable-zone font-mono font-normal" contenteditable="true">2026-0089</span>
                         </h2>
-                        <span class="text-[10px] font-mono text-slate-400">Ref ID: #MM-2026-DDP08</span>
                     </div>
+                    <div class="mt-4 md:mt-0 text-xs text-slate-400 space-y-1 mono-font">
+                        <p>Date: <span class="text-white editable-zone" contenteditable="true">June 8, 2026</span></p>
+                        <p>Delivery Target: <span class="text-white editable-zone" contenteditable="true">July 15, 2026</span></p>
+                    </div>
+                </div>
+            </div>
 
-                    <div class="overflow-hidden rounded-lg border border-slate-100">
-                        <table class="w-full text-left text-xs border-collapse">
-                            <thead>
-                                <tr class="bg-slate-900 text-white font-mono text-[10px] uppercase tracking-wider">
-                                    <th class="p-3 font-bold">Ref / Code</th>
-                                    <th class="p-3">Technical Description Matrix</th>
-                                    <th class="p-3 text-center">Qty</th>
-                                    <th class="p-3 text-right">Unit Rate</th>
-                                    <th class="p-3 text-right">Total Net (HT)</th>
-                                </tr>
-                            </table>
-                        <div class="max-h-[620mm] overflow-y-auto">
-                            <table class="w-full text-left text-xs border-collapse">
-                                <tbody id="liveBOMTableBody" class="text-slate-700 divide-y divide-slate-100">
-                                    </tbody>
-                            </table>
-                        </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 py-8 border-b border-slate-800/60">
+                
+                <div class="space-y-2 bg-slate-950/40 p-4 rounded-xl border border-slate-800/50">
+                    <span class="text-[10px] font-bold tracking-wider text-slate-500 uppercase block mono-font">Vendor / Recipient Address</span>
+                    <div class="text-sm font-bold text-white editable-zone" contenteditable="true" id="clientNameField" placeholder="Click to change client name...">[Click to Edit Client Name / Company]</div>
+                    <div class="text-xs text-slate-400 space-y-1 mt-1 leading-relaxed">
+                        <p class="editable-zone min-w-[200px]" contenteditable="true" placeholder="Street Address line 1">123 Logistics Boulevard, Suite 400</p>
+                        <p class="editable-zone min-w-[200px]" contenteditable="true" placeholder="City, State, ZIP">Tangier Tech Valley, 90000</p>
+                        <p class="editable-zone min-w-[200px]" contenteditable="true" placeholder="Country">Morocco</p>
                     </div>
                 </div>
 
-                <div>
-                    <div class="flex justify-end mt-4">
-                        <div class="w-72 bg-slate-50 p-4 rounded-xl border border-slate-100 text-xs flex flex-col gap-2">
-                            <div class="flex justify-between text-slate-500">
-                                <span>Subtotal Base HT:</span>
-                                <span id="valSubtotalHt" class="font-mono font-bold text-slate-900">0.00 €</span>
-                            </div>
-                            <div class="flex justify-between text-slate-500">
-                                <span>DDP Freight Transport:</span>
-                                <span id="valFreightCost" class="font-mono font-bold text-slate-900">0.00 €</span>
-                            </div>
-                            <div class="flex justify-between text-slate-500">
-                                <span>Customs & Import Fees:</span>
-                                <span id="valCustomsCost" class="font-mono font-bold text-slate-900">0.00 €</span>
-                            </div>
-                            <div class="flex justify-between text-slate-500">
-                                <span id="lblVatDisplay">VAT Tax Engine (20%):</span>
-                                <span id="valVatValue" class="font-mono font-bold text-slate-900">0.00 €</span>
-                            </div>
-                            <div class="flex justify-between border-t border-slate-200 pt-2 text-sm font-black text-slate-900">
-                                <span>Total DDP Contract:</span>
-                                <span id="valGrandTotalTtc" class="font-mono text-rose-600">0.00 €</span>
-                            </div>
-                        </div>
+                <div class="grid grid-cols-2 gap-4 text-xs">
+                    <div class="space-y-1">
+                        <span class="text-[10px] font-bold tracking-wider text-slate-500 uppercase block mono-font">Payment Matrix</span>
+                        <p class="text-white font-medium editable-zone" contenteditable="true">Net 30 Days</p>
+                        <p class="text-slate-400 editable-zone" contenteditable="true">Bank Wire Transfer</p>
                     </div>
-
-                    <div class="border-t border-slate-100 pt-3 mt-6 flex justify-between items-center text-[10px] text-slate-400 font-mono">
-                        <span>Reconciliation Complete</span>
-                        <span>Document Page 2 / 3</span>
+                    <div class="space-y-1">
+                        <span class="text-[10px] font-bold tracking-wider text-slate-500 uppercase block mono-font">Shipping Terms</span>
+                        <p class="text-white font-medium editable-zone" contenteditable="true">DDP (Incoterms 2020)</p>
+                        <p class="text-slate-400 editable-zone" contenteditable="true">Via Ground Freight</p>
                     </div>
                 </div>
-            </section>
+            </div>
 
-            <section id="pageSignature" class="a4-page">
-                <div>
-                    <div class="flex justify-between items-center border-b border-slate-200 pb-3 mb-6">
-                        <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider">3. Technical Terms & Authorization Sign-off</h2>
-                        <span class="text-[10px] font-mono text-slate-400">Execution Layer</span>
-                    </div>
+            <div class="py-8">
+                <span class="text-[10px] font-bold tracking-wider text-slate-500 uppercase block mono-font mb-4">Financial Breakdown & Line Items</span>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400 font-mono">
+                                <th class="pb-3 font-normal">Item Description</th>
+                                <th class="pb-3 text-center font-normal w-16">Qty</th>
+                                <th class="pb-3 text-right font-normal w-32">Unit Price</th>
+                                <th class="pb-3 text-right font-normal w-34">Total Base</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lineItemContainer" class="divide-y divide-slate-800/40 text-xs text-slate-300">
+                            <tr class="line-item-row" data-base-price="12500.00">
+                                <td class="py-4 pr-4">
+                                    <div class="font-medium text-white editable-zone" contenteditable="true">High-Precision Structural FEA Analysis & Validation Report</div>
+                                    <div class="text-[11px] text-slate-500 mt-0.5 editable-zone" contenteditable="true">Complete mechanical stress assessment on assembly joints.</div>
+                                </td>
+                                <td class="py-4 text-center font-mono editable-zone" contenteditable="true" oninput="calculateFinancialTotals()">1</td>
+                                <td class="py-4 text-right font-mono text-slate-400"><span class="unit-price-disp">12,000.00</span> <span class="curr-label">MAD</span></td>
+                                <td class="py-4 text-right font-mono font-medium text-white"><span class="row-total-disp">12,000.00</span> <span class="curr-label">MAD</span></td>
+                            </tr>
+                            <tr class="line-item-row" data-base-price="450.00">
+                                <td class="py-4 pr-4">
+                                    <div class="font-medium text-white editable-zone" contenteditable="true">Custom Python Integration Scripts (Abaqus API Automation)</div>
+                                    <div class="text-[11px] text-slate-500 mt-0.5 editable-zone" contenteditable="true">Automation routines for automatic mesh optimization extraction.</div>
+                                </td>
+                                <td class="py-4 text-center font-mono editable-zone" contenteditable="true" oninput="calculateFinancialTotals()">8</td>
+                                <td class="py-4 text-right font-mono text-slate-400"><span class="unit-price-disp">450.00</span> <span class="curr-label">MAD</span></td>
+                                <td class="py-4 text-right font-mono font-medium text-white"><span class="row-total-disp">3,600.00</span> <span class="curr-label">MAD</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-                    <div class="text-xs text-slate-600 space-y-4 leading-relaxed mb-8">
-                        <div>
-                            <h4 class="font-bold text-slate-900 uppercase mb-1">3.1 Quality Assurance Guarantee Protocol</h4>
-                            <p>MecMaroc certifies that all component coordinates have successfully cleared physical testing baselines and stress testing limits matching standard mechanical validation profiles prior to batching and transport deployment.</p>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-slate-900 uppercase mb-1">3.2 Payment Schedules & Incoterms</h4>
-                            <p>As per negotiated criteria, payments must compile through banking routes within exactly 30 calendar days of delivery drop completion inside Valladolid. All logistics liabilities remain structured within DDP framework rules.</p>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-12 mt-16 text-xs pt-8">
-                        <div>
-                            <p class="font-bold text-slate-400 uppercase tracking-wider font-mono text-[9px] mb-12">Authorized Engineering Issuer: MecMaroc SARL</p>
-                            <div class="border-t border-slate-300 pt-2 text-slate-800">
-                                <p class="font-bold">MecMaroc Operations Directorate</p>
-                                <p class="text-[11px] text-slate-400">Timestamped Digital Approval Engine</p>
-                            </div>
-                        </div>
-                        <div>
-                            <p class="font-bold text-slate-400 uppercase tracking-wider font-mono text-[9px] mb-12">Consignee Acknowledgment Acceptance: Metrolec Spain</p>
-                            <div class="border-t border-slate-300 pt-2 text-slate-400 italic">
-                                Signature & Verification Seal Stamp Space
-                            </div>
-                        </div>
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-8 border-t border-slate-800 pt-8 mt-4">
+                <div class="md:col-span-7 space-y-4">
+                    <div class="p-4 bg-slate-950/30 rounded-xl border border-slate-800/40 text-xs text-slate-400 space-y-1.5 leading-relaxed">
+                        <span class="font-mono text-[10px] text-blue-400 uppercase font-bold tracking-wider block">Legal Declarations</span>
+                        <p class="editable-zone" contenteditable="true">1. All prices are calculated based on baseline technical requirements specified in Annex A.</p>
+                        <p class="editable-zone" contenteditable="true">2. Standard service deployment schedules initiate strictly post initial payment deposit verification clearing.</p>
                     </div>
                 </div>
 
-                <div>
-                    <div class="fea-gradient rounded mb-4"></div>
-                    <div class="flex justify-between items-center text-[9px] text-slate-400 font-mono">
-                        <span>Capital 100,000 DH — Patente No. 471208 — RC Tangier</span>
-                        <span>Document Page 3 / 3</span>
+                <div class="md:col-span-5 space-y-6">
+                    <div class="bg-slate-950/60 p-4 rounded-xl border border-slate-800 space-y-2 text-xs mono-font">
+                        <div class="flex justify-between text-slate-400">
+                            <span>Subtotal (HT):</span>
+                            <span id="subtotalVal" class="text-white font-medium">15,600.00 MAD</span>
+                        </div>
+                        <div class="flex justify-between text-slate-400">
+                            <span>VAT Amount (<span id="vatPercentDisp">20</span>%):</span>
+                            <span id="vatVal" class="text-white font-medium">3,120.00 MAD</span>
+                        </div>
+                        <div class="h-px bg-slate-800 my-2"></div>
+                        <div class="flex justify-between text-sm font-bold">
+                            <span class="text-blue-400">Grand Total (TTC):</span>
+                            <span id="grandTotalVal" class="text-emerald-400">18,720.00 MAD</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 flex flex-col items-end">
+                        <div class="text-center w-48 space-y-2">
+                            <span class="text-[10px] font-bold tracking-wider text-slate-500 uppercase block mono-font">Authorized Stamp / Sign</span>
+                            <div class="h-24 w-48 border border-dashed border-slate-700/60 rounded-xl flex flex-col items-center justify-center bg-slate-950/20 text-slate-600 transition-all hover:border-blue-500/40 hover:bg-slate-900/40 group relative overflow-hidden">
+                                <div class="absolute inset-0 flex flex-col items-center justify-center p-2 text-center pointer-events-none opacity-40 group-hover:opacity-70 transition-opacity">
+                                    <div class="border-2 border-double border-blue-500/40 rounded-full p-2 h-16 w-16 flex items-center justify-center text-[8px] font-bold text-blue-400 uppercase tracking-tighter rotate-12">
+                                        MecMaroc
+                                    </div>
+                                </div>
+                                <span class="text-[10px] tracking-tight font-sans text-slate-400 relative z-10 font-medium">Click to Sign / Append</span>
+                                <input type="file" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer z-20" onchange="loadStampImage(event)">
+                                <img id="stampImageCanvas" class="absolute inset-0 w-full h-full object-contain hidden z-30 p-1 bg-slate-900/90 rounded-xl" alt="Stamp">
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </section>
+            </div>
 
         </div>
     </main>
 
-    <div id="appToastBox" class="no-print fixed bottom-6 right-6 bg-slate-900 border border-slate-700 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 transform translate-y-24 opacity-0 transition-all duration-300 z-50">
-        <i id="toastIconNode" class="fa-solid fa-circle-check text-emerald-400"></i>
-        <span id="toastMsgNode" class="text-xs font-bold font-sans">Operation Successful</span>
+    <div id="appToast" class="no-print fixed bottom-6 right-6 bg-slate-900 border border-slate-700 text-slate-200 text-xs font-medium px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 transform translate-y-24 opacity-0 transition-all duration-300 ease-out z-50">
+        <i id="toastIcon" class="fa-solid fa-bell text-blue-400"></i>
+        <span id="toastMessage">Studio interface refreshed successfully.</span>
     </div>
 
     <script>
-        // Core Mathematical Exchange and Currency Dataset Engine Config Profiles
-        const currencyMap = {
-            EUR: { symbol: '€', label: 'EUR', rate: 1.000 },
-            USD: { symbol: '$', label: 'USD', rate: 1.085 },
-            MAD: { symbol: 'MAD', label: 'MAD', rate: 10.92 }
+        // System Config Cache
+        const config = {
+            baseVatRate: 20
         };
 
-        let currentCurrencyKey = 'EUR';
+        // Recalculate financial formulas based on interactive fields or currency matrix modifiers
+        function calculateFinancialTotals() {
+            const selector = document.getElementById('currencySelect');
+            const targetOption = selector.options[selector.selectedIndex];
+            const rate = parseFloat(targetOption.getAttribute('data-rate')) || 1.0;
+            const label = targetOption.value;
 
-        // High-precision reactive table state matrix
-        let bomArrayDataset = [
-            { ref: "MEC-AL-002", desc: "Usinage de précision - Bloc Alunox T6", qty: 2, price: 240.00 },
-            { ref: "MEC-FE-891", desc: "Ajustement & Rectification de glissière linéaire", qty: 1, price: 410.00 }
-        ];
+            const rows = document.querySelectorAll('.line-item-row');
+            let accumulatedSubtotalHt = 0;
 
-        // Process runtime components instantly on launch
-        document.addEventListener("DOMContentLoaded", () => {
-            renderBOMDataMatrix();
-        });
+            rows.forEach(row => {
+                const basePrice = parseFloat(row.getAttribute('data-base-price')) || 0;
+                // Treat quantities cleanly as innerText contents
+                const qtyCell = row.querySelector('td:nth-child(2)');
+                let qty = parseInt(qtyCell.innerText.trim()) || 0;
 
-        // Scroll layout to look directly at the selected section page view
-        function scrollPage(id) {
-            const target = document.getElementById(id);
-            if(target) {
-                target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                dispatchToastMessage("Workspace canvas scrolled", "fa-arrows-to-eye");
+                // Enforce safety floor
+                if (qty < 0) qty = 0;
+
+                const convertedUnitPrice = basePrice * rate;
+                const rowTotalBase = basePrice * qty;
+                const convertedRowTotal = rowTotalBase * rate;
+
+                accumulatedSubtotalHt += rowTotalBase;
+
+                // Sync individual cells dynamically
+                row.querySelector('.unit-price-disp').innerText = convertedUnitPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                row.querySelector('.row-total-disp').innerText = convertedRowTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            });
+
+            // Derive global figures
+            const subtotalHt = accumulatedSubtotalHt;
+            const vatValue = subtotalHt * (config.baseVatRate / 100);
+            const grandTotalTtc = subtotalHt + vatValue;
+
+            // Render calculations with localization updates
+            const subValEl = document.getElementById('subtotalVal');
+            const vatPctEl = document.getElementById('vatPercentDisp');
+            const vatValEl = document.getElementById('vatVal');
+            const grndTotEl = document.getElementById('grandTotalVal');
+            const labelEls = document.querySelectorAll('.curr-label');
+
+            labelEls.forEach(el => el.innerText = label);
+
+            if (subValEl) subValEl.innerText = `${(subtotalHt * rate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${label}`;
+            if (vatPctEl) vatPctEl.innerText = `${config.baseVatRate}`;
+            if (vatValEl) vatValEl.innerText = `${(vatValue * rate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${label}`;
+            if (grndTotEl) grndTotEl.innerText = `${(grandTotalTtc * rate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${label}`;
+        }
+
+        function updateCurrencyDisplay() {
+            calculateFinancialTotals();
+            const curr = document.getElementById('currencySelect').value;
+            triggerToast(`Workspace shifted to financial profile: ${curr}`, "fa-coins");
+        }
+
+        // Inline client-side file pipeline for dynamic corporate branding stamps
+        function loadStampImage(event) {
+            const output = document.getElementById('stampImageCanvas');
+            if(event.target.files && event.target.files[0]) {
+                output.src = URL.createObjectURL(event.target.files[0]);
+                output.classList.remove('hidden');
+                triggerToast("Validation Stamp successfully linked onto canvas context.", "fa-stamp");
             }
         }
 
-        // Add rows safely into the master array
-        function addNewBOMRow() {
-            const inputRef = document.getElementById("addPartRef");
-            const inputDesc = document.getElementById("addPartDesc");
-            const inputQty = document.getElementById("addPartQty");
-            const inputPrice = document.getElementById("addPartPrice");
-
-            const ref = inputRef.value.trim() || "MEC-GENERIC";
-            const desc = inputDesc.value.trim() || "Machined Component Deliverable Line";
-            const qty = parseInt(inputQty.value) || 1;
-            const price = parseFloat(inputPrice.value) || 0.00;
-
-            // Push object to state
-            bomArrayDataset.push({ ref, desc, qty, price });
-
-            // Recompile changes onto document view elements
-            renderBOMDataMatrix();
-            dispatchToastMessage("Item appended into BOM dataset array", "fa-circle-plus");
-
-            // Reset inputs for faster workspace data ingestion
-            inputRef.value = "MEC-2026-";
-            inputDesc.value = "";
-            inputQty.value = "1";
-            inputPrice.value = "0.00";
-        }
-
-        // Delete row out of state indices
-        function removeBOMRow(index) {
-            bomArrayDataset.splice(index, 1);
-            renderBOMDataMatrix();
-            dispatchToastMessage("Item index removed from grid context", "fa-trash-can");
-        }
-
-        // Change workspace display currency labels and factors dynamically
-        function changeGlobalCurrency() {
-            currentCurrencyKey = document.getElementById("inputCurrencySelect").value;
+        // Client-side execution of automated multi-platform layouts to bypass local sandbox issues
+        function exportToPDF() {
+            triggerToast("Compiling print metrics... Please hold.", "fa-spinner");
+            const element = document.getElementById('poDocumentSheet');
             
-            // Adjust all input labels across the document control fields
-            const targetSymbol = currencyMap[currentCurrencyKey].symbol;
-            document.querySelectorAll(".currency-label").forEach(el => {
-                el.innerText = targetSymbol;
-            });
-
-            recalculateTotals();
-            dispatchToastMessage(`Workspace recalibrated to ${currentCurrencyKey}`, "fa-coins");
-        }
-
-        // Build HTML Table grid content programmatically
-        function renderBOMDataMatrix() {
-            const tableBody = document.getElementById("liveBOMTableBody");
-            tableBody.innerHTML = "";
-
-            const cfg = currencyMap[currentCurrencyKey];
-
-            bomArrayDataset.forEach((item, idx) => {
-                const convertedPrice = item.price * cfg.rate;
-                const convertedTotalHt = (item.qty * item.price) * cfg.rate;
-
-                const rowHtmlString = `
-                    <tr class="border-b border-slate-100 hover:bg-slate-50/80 transition group font-sans">
-                        <td class="p-3 font-mono font-bold text-slate-900">${item.ref}</td>
-                        <td class="p-3 text-slate-700 font-medium">
-                            ${item.desc}
-                            <button onclick="removeBOMRow(${idx})" class="no-print opacity-0 group-hover:opacity-100 ml-2 text-rose-500 hover:text-rose-700 transition" title="Delete Entry Row">
-                                <i class="fa-solid fa-trash-can text-[10px]"></i>
-                            </button>
-                        </td>
-                        <td class="p-3 text-center font-mono font-bold text-slate-800">${item.qty}</td>
-                        <td class="p-3 text-right font-mono text-slate-600">${convertedPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${cfg.symbol}</td>
-                        <td class="p-3 text-right font-mono font-bold text-slate-900">${convertedTotalHt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${cfg.symbol}</td>
-                    </tr>
-                `;
-                tableBody.insertAdjacentHTML("beforeend", rowHtmlString);
-            });
-
-            recalculateTotals();
-        }
-
-        // High-precision financial logic
-        function recalculateTotals() {
-            let baseSubtotalHt = 0;
-            bomArrayDataset.forEach(item => {
-                baseSubtotalHt += item.qty * item.price;
-            });
-
-            const rawFreight = parseFloat(document.getElementById("inputDdpFreight").value) || 0;
-            const rawCustoms = parseFloat(document.getElementById("inputDdpCustoms").value) || 0;
-            const vatRatePercent = parseFloat(document.getElementById("inputVatRate").value) || 0;
-
-            const cfg = currencyMap[currentCurrencyKey];
-
-            // Core mathematical aggregation formulas
-            const vatCalculatedValue = (baseSubtotalHt + rawFreight + rawCustoms) * (vatRatePercent / 100);
-            const absoluteGrandTotalTtc = baseSubtotalHt + rawFreight + rawCustoms + vatCalculatedValue;
-
-            // Render elements using correct currency conversion logic maps
-            document.getElementById("valSubtotalHt").innerText = `${(baseSubtotalHt * cfg.rate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${cfg.symbol}`;
-            document.getElementById("valFreightCost").innerText = `${(rawFreight * cfg.rate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${cfg.symbol}`;
-            document.getElementById("valCustomsCost").innerText = `${(rawCustoms * cfg.rate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${cfg.symbol}`;
-            
-            document.getElementById("lblVatDisplay").innerText = `VAT Tax Engine (${vatRatePercent}%):`;
-            document.getElementById("valVatValue").innerText = `${(vatCalculatedValue * cfg.rate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${cfg.symbol}`;
-            
-            document.getElementById("valGrandTotalTtc").innerText = `${(absoluteGrandTotalTtc * cfg.rate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${cfg.symbol}`;
-        }
-
-        // Toggle print mode preview frames safely
-        function togglePrintMode() {
-            const body = document.body;
-            const exitBtn = document.getElementById("exitPrintModeBtn");
-            
-            body.classList.toggle("screen-print-active");
-            exitBtn.classList.toggle("hidden");
-
-            if (body.classList.contains("screen-print-active")) {
-                dispatchToastMessage("Print Mode View Active", "fa-print");
-            }
-        }
-
-        // Custom Toast system dispatch messaging logic to bypass iframe alert restrictions
-        function dispatchToastMessage(text, iconAwesomeClass = "fa-circle-check") {
-            const toastNode = document.getElementById("appToastBox");
-            const messageTextNode = document.getElementById("toastMsgNode");
-            const iconElementNode = document.getElementById("toastIconNode");
-
-            messageTextNode.innerText = text;
-            iconElementNode.className = `fa-solid ${iconAwesomeClass} text-amber-400 text-sm`;
-
-            toastNode.classList.remove("translate-y-24", "opacity-0");
-            toastNode.classList.add("translate-y-0", "opacity-100");
-
-            setTimeout(() => {
-                toastNode.classList.remove("translate-y-0", "opacity-100");
-                toastNode.classList.add("translate-y-24", "opacity-0");
-            }, 3000);
-        }
-
-        // Client-side execution code to parse multi-page vectors seamlessly without truncation
-        function exportInvoiceToPDF() {
-            dispatchToastMessage("Compiling document vectors...", "fa-file-pdf");
-            
-            const printElementTarget = document.getElementById('entirePrintableSuite');
-            const pdfOutputOptions = {
-                margin:       0,
-                filename:     'MecMaroc_High_Precision_DDP_Contract.pdf',
+            const opt = {
+                margin:       [0.2, 0.2, 0.2, 0.2],
+                filename:     'MecMaroc_PO_Contract.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, logging: false },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#0b0f19' },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
             };
 
-            html2pdf().set(pdfOutputOptions).from(printElementTarget).save();
+            // Temporary print context modification for clean document output layout
+            html2pdf().set(opt).from(element).save().then(() => {
+                triggerToast("Document compiled and downloaded successfully.", "fa-circle-check");
+            });
         }
+
+        function triggerToast(text, fontAwesomeIcon = "fa-bell") {
+            const toast = document.getElementById('appToast');
+            const msg = document.getElementById('toastMessage');
+            const icon = document.getElementById('toastIcon');
+
+            if (!toast) return;
+
+            msg.innerText = text;
+            icon.className = `fa-solid ${fontAwesomeIcon} text-blue-400`;
+
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 3500);
+        }
+
+        // Run baseline setup loop on execution init
+        window.addEventListener('DOMContentLoaded', () => {
+            calculateFinancialTotals();
+        });
     </script>
 </body>
 </html>
